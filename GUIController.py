@@ -9,16 +9,26 @@ class FileContainer(QWidget):
         print(filePath)
         self.labelName = filePath
 
-        boxlayout = QHBoxLayout()
+        HButtonLayout = QHBoxLayout()
         fileNameLabel = QLabel(self.labelName)
+        
+        VFileButtonLayout = QVBoxLayout()
+        VFileButtonFrame = QFrame()
 
         self.openFileButton = QPushButton("Open File", self)
         self.openFileButton.clicked.connect(self.onClicked)
+        
+        self.openFileButton2 = QPushButton("Open File", self)
+        self.openFileButton2.clicked.connect(self.onClicked)
 
-        boxlayout.addWidget(fileNameLabel)
-        boxlayout.addWidget(self.openFileButton)
+        VFileButtonLayout.addWidget(self.openFileButton)
+        VFileButtonLayout.addWidget(self.openFileButton2)
+        VFileButtonFrame.setLayout(VFileButtonLayout)
 
-        self.setLayout(boxlayout)
+        HButtonLayout.addWidget(fileNameLabel)
+        HButtonLayout.addWidget(VFileButtonFrame)
+
+        self.setLayout(HButtonLayout)
 
     def onClicked(self):
         print("clicked button", self.labelName)

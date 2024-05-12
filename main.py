@@ -37,40 +37,6 @@ class MainWindow(QMainWindow):
         
         tabs.addTab(recentTabPage, "Recent")
         self.setCentralWidget(tabs)
-'''
-        layout1 = QHBoxLayout()
-        layout2 = QVBoxLayout()
-
-        tab1 = FileContainer()
-        tab2 = QWidget()
-
-        label1 = QLabel("Recent")
-        label2 = QLabel("Pinned")
-
-        button1 = QPushButton("Open File")
-        button2 = QPushButton(" File")
-
-        button3 = QFontComboBox()
-        layout2.addWidget(button3)
-        button4 = QDial()
-        layout2.addWidget(button4)
-
-        tab1.layout = layout1
-        tab1.layout.addWidget(label1)
-        tab1.layout.addWidget(button1)
-        tab1.setLayout(tab1.layout)
-
-        tab2.layout = QVBoxLayout()
-        tab2.layout.addWidget(label2)
-        tab2.layout.addWidget(button2)
-        tab2.setLayout(tab2.layout)
-
-        layout1.addLayout(layout2)
-
-        tabs.addTab(tab1, "Tab 1")
-        tabs.addTab(tab2, "Tab 2")
-
-        self.setCentralWidget(tabs)'''
 
 app = QApplication(sys.argv)
 
