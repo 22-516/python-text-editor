@@ -9,23 +9,27 @@ from texteditor import *
 
 import random  # testing
 
-
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
         self.setWindowTitle("Editor")
-        #self.setGeometry(0, 0, 800, 600)
+        # self.setGeometry(0, 0, 800, 600)
 
-        self.tabs = QTabWidget()
-        self.tabs.setTabPosition(QTabWidget.TabPosition.North)
+        self.tabs = QTabWidget(self)
         self.setCentralWidget(self.tabs)
-        
+        self.tabs.setTabPosition(QTabWidget.TabPosition.North)
+
+        self.AddToolbar()
+
         self.currentEditor = TextEditor()
 
         self.tabs.addTab(self.currentEditor, "testing")
         self.setCentralWidget(self.tabs)
-        
+
+        '''self.status_bar = QStatusBar()
+        self.setStatusBar(self.status_bar)
+        self.status_bar.showMessage("Ready", 5000)'''
 
         '''recentTabPage = QScrollArea()
         recentTabPage.setAutoFillBackground(True)
@@ -45,6 +49,24 @@ class MainWindow(QMainWindow):
 
         self.tabs.addTab(recentTabPage, "Recent")
         self.setCentralWidget(self.tabs)'''
+
+    def AddToolbar(self):
+        self.toolbar = QToolBar("main toolbar", self)
+        self.toolbar.setIconSize(QSize(32, 32))
+        self.addToolBar(self.toolbar)
+
+        self.toolbar.addWidget(QLabel("toolbar test"))
+        self.toolbar.addWidget(QCheckBox("checkbox"))
+        
+        button_action = QAction("&Checkable button", self)
+        button_action.setStatusTip("a checkable button")
+        button_action.triggered.connect(self.buttonClick)
+        button_action.setCheckable(True)
+        self.toolbar.addAction(button_action)
+        #self.toolbar.addSeparator()
+        
+    def buttonClick(self, string1):
+        print(string1)
 
 
 app = QApplication(sys.argv)
