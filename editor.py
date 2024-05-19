@@ -8,6 +8,7 @@ from guicontroller import *  # FileContainer
 from texteditor import *
 
 import random  # testing
+import time
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -26,6 +27,7 @@ class MainWindow(QMainWindow):
 
         self.tabs.addTab(self.currentEditor, "testing")
         self.setCentralWidget(self.tabs)
+        
 
         '''self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
@@ -58,15 +60,16 @@ class MainWindow(QMainWindow):
         self.toolbar.addWidget(QLabel("toolbar test"))
         self.toolbar.addWidget(QCheckBox("checkbox"))
         
-        button_action = QAction("&Checkable button", self)
-        button_action.setStatusTip("a checkable button")
+        button_action = QAction("&Button", self)
+        button_action.setStatusTip("a button")
         button_action.triggered.connect(self.buttonClick)
-        button_action.setCheckable(True)
+        #button_action.setCheckable(True)
         self.toolbar.addAction(button_action)
         #self.toolbar.addSeparator()
         
     def buttonClick(self, string1):
         print(string1)
+        self.currentEditor.insertImage()
 
 
 app = QApplication(sys.argv)

@@ -6,18 +6,18 @@ from PyQt6.QtWidgets import *
 class TextEditor(QTextEdit):
     def __init__(self):
         super().__init__()
-        #layout = QVBoxLayout(self)
-        
-        
-        #self.textArea = QTextEdit()
-        
+
+        # self.setMaximumWidth(1000)
+
         for i in range(9):
             self.append("testing")
-        
-        #layout.addWidget(self.textArea)
-        #print(self.textArea.document())
-        
-        
+
+
+    def insertImage(self):
+        cursor = QTextCursor(self.textCursor())
+        imageFormat = QTextImageFormat()
+        imageFormat.setName(".\images.png")
+        cursor.insertImage(imageFormat)
 
     '''def onClicked(self):
         print("clicked button", self.labelName)
