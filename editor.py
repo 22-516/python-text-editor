@@ -46,8 +46,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.tabs)'''
 
     def InitActions(self):
-        self.newPageAction = QAction("&New Page", self)
-        # self.button_action.setToolTip("tooltip")
+        self.newPageAction = QAction("&New Page", self) # self.button_action.setToolTip("tooltip")
         self.newPageAction.triggered.connect(self.NewPageButton)
 
         self.newImageAction = QAction("&Insert Test Image", self)
@@ -63,7 +62,7 @@ class MainWindow(QMainWindow):
     def AddMenubar(self):
         self.menubar = QMenuBar(self)
         self.setMenuBar(self.menubar)
-
+        
         self.menubar.addMenu("tests")
 
     def AddToolbar(self):
@@ -71,14 +70,9 @@ class MainWindow(QMainWindow):
         self.toolbar.setIconSize(QSize(32, 32))
         self.addToolBar(self.toolbar)
 
-        # self.toolbar.addWidget(QLabel("toolbar test"))
-        # self.toolbar.addWidget(QCheckBox("checkbox"))
-
-        # button_action.setCheckable(True)
         self.toolbar.addAction(self.newPageAction)
         self.toolbar.addSeparator()
         self.toolbar.addAction(self.newImageAction)
-        # self.toolbar.addSeparator()
 
     def AddPage(self, pageName="New Document"):
         self.currentEditor = TextEditor()
@@ -86,7 +80,7 @@ class MainWindow(QMainWindow):
         self.tabs.setCurrentWidget(self.currentEditor)
 
 
-#
+#   signals
     def onTabChange(self):
         self.currentEditor = self.tabs.currentWidget()
         print(self.currentEditor)
