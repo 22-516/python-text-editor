@@ -2,6 +2,7 @@ from PyQt6.QtCore import *  # temp
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 
+import random
 
 class TextEditor(QTextEdit):
     def __init__(self):
@@ -9,11 +10,11 @@ class TextEditor(QTextEdit):
 
         # self.setMaximumWidth(1000)
 
+        randomTestingPageId = str(random.randint(1, 100)) #testing new tabs
         for i in range(9):
-            self.append("testing")
+            self.append("testing " + randomTestingPageId)
 
-
-    def insertImage(self):
+    def insertImage(self): #testing
         cursor = QTextCursor(self.textCursor())
         imageFormat = QTextImageFormat()
         imageFormat.setName(".\images.png")

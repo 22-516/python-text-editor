@@ -7,9 +7,6 @@ from PyQt6.QtWidgets import *
 from guicontroller import *  # FileContainer
 from texteditor import *
 
-import random  # testing
-import time
-
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -17,17 +14,13 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Editor")
         # self.setGeometry(0, 0, 800, 600)
 
-        self.tabs = QTabWidget(self)
-        self.setCentralWidget(self.tabs)
-        self.tabs.setTabPosition(QTabWidget.TabPosition.North)
-
+        self.InitActions()
+        self.AddTabs()
+        self.AddMenubar()
         self.AddToolbar()
+        self.AddPage()
 
-        self.currentEditor = TextEditor()
-
-        self.tabs.addTab(self.currentEditor, "testing")
         self.setCentralWidget(self.tabs)
-        
 
         '''self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
@@ -52,23 +45,58 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(recentTabPage, "Recent")
         self.setCentralWidget(self.tabs)'''
 
+    def InitActions(self):
+        self.newPageAction = QAction("&New Page", self)
+        # self.button_action.setToolTip("tooltip")
+        self.newPageAction.triggered.connect(self.NewPageButton)
+
+        self.newImageAction = QAction("&Insert Test Image", self)
+        self.newImageAction.triggered.connect(self.InsertTestImage)
+
+    def AddTabs(self):
+        self.tabs = QTabWidget(self)
+        self.setCentralWidget(self.tabs)
+        self.tabs.setTabPosition(QTabWidget.TabPosition.North)
+        
+        self.tabs.currentChanged.connect(self.onTabChange)
+    
+    def AddMenubar(self):
+        self.menubar = QMenuBar(self)
+        self.setMenuBar(self.menubar)
+
+        self.menubar.addMenu("tests")
+
     def AddToolbar(self):
         self.toolbar = QToolBar("main toolbar", self)
         self.toolbar.setIconSize(QSize(32, 32))
         self.addToolBar(self.toolbar)
 
-        self.toolbar.addWidget(QLabel("toolbar test"))
-        self.toolbar.addWidget(QCheckBox("checkbox"))
-        
-        button_action = QAction("&Button", self)
-        button_action.setStatusTip("a button")
-        button_action.triggered.connect(self.buttonClick)
-        #button_action.setCheckable(True)
-        self.toolbar.addAction(button_action)
-        #self.toolbar.addSeparator()
-        
-    def buttonClick(self, string1):
-        print(string1)
+        # self.toolbar.addWidget(QLabel("toolbar test"))
+        # self.toolbar.addWidget(QCheckBox("checkbox"))
+
+        # button_action.setCheckable(True)
+        self.toolbar.addAction(self.newPageAction)
+        self.toolbar.addSeparator()
+        self.toolbar.addAction(self.newImageAction)
+        # self.toolbar.addSeparator()
+
+    def AddPage(self, pageName="New Document"):
+        self.currentEditor = TextEditor()
+        self.tabs.addTab(self.currentEditor, pageName)
+        self.tabs.setCurrentWidget(self.currentEditor)
+
+
+#
+    def onTabChange(self):
+        self.currentEditor = self.tabs.currentWidget()
+        print(self.currentEditor)
+
+#   actions
+
+    def NewPageButton(self):
+        self.AddPage()
+
+    def InsertTestImage(self):
         self.currentEditor.insertImage()
 
 
