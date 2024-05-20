@@ -14,13 +14,8 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Editor")
         # self.setGeometry(0, 0, 800, 600)
 
-        self.InitActions()
-        self.AddTabs()
-        self.AddMenubar()
-        self.AddToolbar()
+        self.Initalise()
         self.AddPage()
-
-        self.setCentralWidget(self.tabs)
 
         '''self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
@@ -44,6 +39,13 @@ class MainWindow(QMainWindow):
 
         self.tabs.addTab(recentTabPage, "Recent")
         self.setCentralWidget(self.tabs)'''
+        
+#   functions
+    def Initalise(self):
+        self.InitActions()
+        self.AddTabs()
+        self.AddMenubar()
+        self.AddToolbar()
 
     def InitActions(self):
         self.newPageAction = QAction("&New Page", self) # self.button_action.setToolTip("tooltip")
@@ -56,13 +58,11 @@ class MainWindow(QMainWindow):
         self.tabs = QTabWidget(self)
         self.setCentralWidget(self.tabs)
         self.tabs.setTabPosition(QTabWidget.TabPosition.North)
-        
-        self.tabs.currentChanged.connect(self.onTabChange)
+        self.tabs.currentChanged.connect(self.OnTabChange)
     
     def AddMenubar(self):
         self.menubar = QMenuBar(self)
         self.setMenuBar(self.menubar)
-        
         self.menubar.addMenu("tests")
 
     def AddToolbar(self):
@@ -79,9 +79,8 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.currentEditor, pageName)
         self.tabs.setCurrentWidget(self.currentEditor)
 
-
 #   signals
-    def onTabChange(self):
+    def OnTabChange(self):
         self.currentEditor = self.tabs.currentWidget()
         print(self.currentEditor)
 
