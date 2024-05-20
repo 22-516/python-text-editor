@@ -85,7 +85,6 @@ class MainWindow(QMainWindow):
         print(self.currentEditor)
 
 #   actions
-
     def NewPageButton(self):
         self.AddPage()
 
