@@ -36,4 +36,27 @@ class FileContainer(QWidget):
     def onClicked2(self):
         print("clicked button 2", self.labelName)
         self.setParent(None)
-        #self.hide()
+        # self.hide()
+
+
+class TabCloseDialog(QDialog):
+    def __init__(self, documentName="testing"):
+        super().__init__()
+
+        self.setWindowTitle("Confirmation")
+
+        QBtn = (
+            QDialogButtonBox.StandardButton.Save
+            | QDialogButtonBox.StandardButton.Discard | QDialogButtonBox.StandardButton.Cancel
+        )
+
+        self.buttonBox = QDialogButtonBox(QBtn)
+        self.buttonBox.accepted.connect(self.accept)
+        #self.buttonBox.
+        self.buttonBox.rejected.connect(self.reject)
+
+        self.layout = QVBoxLayout()
+        message = QLabel("Close tab \"" + documentName + "\"")
+        self.layout.addWidget(message)
+        self.layout.addWidget(self.buttonBox)
+        self.setLayout(self.layout)

@@ -1,10 +1,11 @@
 import sys
+from print_color import print
 
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 
-from guicontroller import *  # FileContainer
+from guicontroller import *  # FileContainer, TabCloseDialog
 from texteditor import *
 
 class MainWindow(QMainWindow):
@@ -58,7 +59,9 @@ class MainWindow(QMainWindow):
         self.tabs = QTabWidget(self)
         self.setCentralWidget(self.tabs)
         self.tabs.setTabPosition(QTabWidget.TabPosition.North)
+        self.tabs.setTabsClosable(True)
         self.tabs.currentChanged.connect(self.OnTabChange)
+        self.tabs.tabCloseRequested.connect(self.OnTabClose)
 
     def AddMenubar(self):
         self.menubar = QMenuBar(self)
@@ -83,7 +86,34 @@ class MainWindow(QMainWindow):
     #   signals
     def OnTabChange(self):
         self.currentEditor = self.tabs.currentWidget()
-        print(self.currentEditor)
+        print("tab changed to", self.currentEditor, tag="success", tag_color="green", color="white")
+
+    def OnTabClose(self, tabIndex):
+        self.tabs.setCurrentIndex(tabIndex)
+        print("closed ", self.currentEditor, tag="success", tag_color="green", color="yellow")
+
+        """
+            todo:
+            prompt user to save or close without saving
+            -- are you sure?
+
+            closeTab = TabCloseDialog(self.tabs.)
+            if closeTab.exec():
+                print("true")
+            else:
+                print("false")
+        """
+
+        closeTab = TabCloseDialog("testing 12345")
+        if closeTab.exec():
+            print("true")
+        else:
+            print("false")
+
+        self.tabs.removeTab(tabIndex)
+
+        if self.tabs.count() <= 0: #ensure always one editor page available
+            self.AddPage()
 
     #   actions
     def NewPageButton(self):
