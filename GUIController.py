@@ -39,7 +39,7 @@ class FileContainer(QWidget):
         # self.hide()
 
 
-class TabCloseDialog(QDialog):
+'''class TabCloseDialog(QDialog):
     def __init__(self, documentName="testing"):
         super().__init__()
 
@@ -59,4 +59,21 @@ class TabCloseDialog(QDialog):
         message = QLabel("Close tab \"" + documentName + "\"")
         self.layout.addWidget(message)
         self.layout.addWidget(self.buttonBox)
-        self.setLayout(self.layout)
+        self.setLayout(self.layout)'''
+
+
+class TabCloseDialog(QMessageBox):
+    def __init__(self):
+        super().__init__()
+        self.setIcon(QMessageBox.Icon.Question)
+        self.setWindowTitle("Confirmation")
+        self.setText("Unsaved Changes")
+        self.setInformativeText("There are unsaved changes. Would you like to save your changes or discard them?")
+
+        self.setStandardButtons(
+            QMessageBox.StandardButton.Save
+            | QMessageBox.StandardButton.Discard
+            | QMessageBox.StandardButton.Cancel
+        )
+        self.setDefaultButton(QMessageBox.StandardButton.Save)
+        self.setEscapeButton(QMessageBox.StandardButton.Cancel)

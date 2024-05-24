@@ -49,7 +49,8 @@ class MainWindow(QMainWindow):
         self.AddToolbar()
 
     def InitActions(self):
-        self.newPageAction = QAction("&New Page", self) # self.button_action.setToolTip("tooltip")
+        self.newPageAction = QAction("&New Page", self) 
+        # self.button_action.setToolTip("tooltip")
         self.newPageAction.triggered.connect(self.NewPageButton)
 
         self.newImageAction = QAction("&Insert Test Image", self)
@@ -90,25 +91,17 @@ class MainWindow(QMainWindow):
 
     def OnTabClose(self, tabIndex):
         self.tabs.setCurrentIndex(tabIndex)
-        print("closed ", self.currentEditor, tag="success", tag_color="green", color="yellow")
-
-        """
-            todo:
-            prompt user to save or close without saving
-            -- are you sure?
-
-            closeTab = TabCloseDialog(self.tabs.)
-            if closeTab.exec():
-                print("true")
-            else:
-                print("false")
-        """
-
-        closeTab = TabCloseDialog("testing 12345")
-        if closeTab.exec():
-            print("true")
-        else:
-            print("false")
+        print("prompting close ", self.currentEditor, tag="success", tag_color="green", color="yellow")
+        
+        closeTabDialogAnswer = TabCloseDialog().exec()
+        if closeTabDialogAnswer == QMessageBox.StandardButton.Save:
+            # self.currentEditor.save()
+            print("save", tag="info", tag_color="blue", color="white")
+        elif closeTabDialogAnswer == QMessageBox.StandardButton.Discard:
+            print("discard", tag="info", tag_color="blue", color="white")
+        elif closeTabDialogAnswer == QMessageBox.StandardButton.Cancel:
+            print("cancel", tag="info", tag_color="blue", color="white")
+            return
 
         self.tabs.removeTab(tabIndex)
 
