@@ -43,12 +43,14 @@ class MainWindow(QMainWindow):
 
     #   functions
     def InitaliseEditorWindow(self):
+        print("initalising editor window", tag="init", tag_color="magenta", color="white")
         self.InitActions()
         self.AddTabs()
         self.AddMenubar()
         self.AddToolbar()
 
     def InitActions(self):
+        print("initalising actions", tag="init", tag_color="magenta", color="white")
         self.newPageAction = QAction("&New Page", self) 
         # self.button_action.setToolTip("tooltip")
         self.newPageAction.triggered.connect(self.NewPageButton)
@@ -57,6 +59,7 @@ class MainWindow(QMainWindow):
         self.newImageAction.triggered.connect(self.InsertTestImage)
 
     def AddTabs(self):
+        print("initalising tabs", tag="init", tag_color="magenta", color="white")
         self.tabs = QTabWidget(self)
         self.setCentralWidget(self.tabs)
         self.tabs.setTabPosition(QTabWidget.TabPosition.North)
@@ -65,12 +68,14 @@ class MainWindow(QMainWindow):
         self.tabs.tabCloseRequested.connect(self.OnTabClose)
 
     def AddMenubar(self):
+        print("initalising menu bar", tag="init", tag_color="magenta", color="white")
         self.menubar = QMenuBar(self)
         self.setMenuBar(self.menubar)
         fileMenuButton = self.menubar.addMenu("File")
         fileMenuButton.addAction(self.newPageAction)
 
     def AddToolbar(self):
+        print("initalising tool bar", tag="init", tag_color="magenta", color="white")
         self.toolbar = QToolBar("main toolbar", self)
         self.toolbar.setIconSize(QSize(32, 32))
         self.addToolBar(self.toolbar)
@@ -80,6 +85,7 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(self.newImageAction)
 
     def AddPage(self, pageName="New Document"):
+        print("adding new page", tag="editor", tag_color="green", color="white")
         self.currentEditor = TextEditor()
         self.tabs.addTab(self.currentEditor, pageName)
         self.tabs.setCurrentWidget(self.currentEditor)
@@ -87,11 +93,11 @@ class MainWindow(QMainWindow):
     #   signals
     def OnTabChange(self):
         self.currentEditor = self.tabs.currentWidget()
-        print("tab changed to", self.currentEditor, tag="success", tag_color="green", color="white")
+        print("tab changed to", self.currentEditor, tag="editor", tag_color="green", color="white")
 
     def OnTabClose(self, tabIndex):
         self.tabs.setCurrentIndex(tabIndex)
-        print("prompting close ", self.currentEditor, tag="success", tag_color="green", color="yellow")
+        print("prompting close ", self.currentEditor, tag="editor", tag_color="green", color="yellow")
         
         closeTabDialogAnswer = TabCloseDialog().exec()
         if closeTabDialogAnswer == QMessageBox.StandardButton.Save:
@@ -110,9 +116,11 @@ class MainWindow(QMainWindow):
 
     #   actions
     def NewPageButton(self):
+        print("new page prompted", tag="editor", tag_color="green", color="white")
         self.AddPage()
 
     def InsertTestImage(self):
+        print("inserting test image", self.currentEditor, tag="editor", tag_color="green", color="white")
         self.currentEditor.insertImage()
 
 
