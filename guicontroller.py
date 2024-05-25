@@ -2,6 +2,7 @@ from PyQt6.QtCore import * #temp
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 
+import random
 class FileContainer(QWidget):
     def __init__(self, filePath):
         super().__init__()
@@ -37,6 +38,34 @@ class FileContainer(QWidget):
         print("clicked button 2", self.labelName)
         self.setParent(None)
         # self.hide()
+
+class RecentFileWindow(QTabWidget):
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle("Home")
+
+        self.setTabPosition(QTabWidget.TabPosition.North)
+        self.setMovable(False)
+        
+        recentTabPage = QScrollArea()
+        recentTabPage.setAutoFillBackground(True)
+        #recentTabPage.setSizeAdjustPolicy()
+        recentTabPage.setWidgetResizable(True)
+        
+        scrollingFrame = QFrame()
+        scrollingFrame.setAutoFillBackground(True)
+        
+        scrollingVLayout = QVBoxLayout()
+
+        for i in range(10):
+            tab1 = FileContainer(str(random.randrange(0,1000000)))
+            scrollingVLayout.addWidget(tab1)
+        
+        scrollingFrame.setLayout(scrollingVLayout)
+        recentTabPage.setWidget(scrollingFrame)
+        
+        self.addTab(recentTabPage, "Recent")
 
 
 '''class TabCloseDialog(QDialog):
