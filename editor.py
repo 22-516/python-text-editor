@@ -1,4 +1,5 @@
 import sys
+import os
 from print_color import print
 
 from PyQt6.QtCore import *
@@ -17,6 +18,8 @@ class MainWindow(QMainWindow):
 
         self.InitaliseEditorWindow()
         self.AddPage()
+        
+        
 
         '''self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
@@ -42,12 +45,13 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.tabs)'''
 
     #   functions
+    #       initalisation
     def InitaliseEditorWindow(self):
         print("initalising editor window", tag="init", tag_color="magenta", color="white")
         self.InitActions()
-        self.AddTabs()
-        self.AddMenubar()
-        self.AddToolbar()
+        self.InitTabs()
+        self.InitMenubar()
+        self.InitToolbar()
 
     def InitActions(self):
         print("initalising actions", tag="init", tag_color="magenta", color="white")
@@ -57,24 +61,38 @@ class MainWindow(QMainWindow):
 
         self.newImageAction = QAction("&Insert Test Image", self)
         self.newImageAction.triggered.connect(self.InsertTestImage)
+        
+        self.openFileAction = QAction("&Open File", self)
+        self.openFileAction.triggered.connect(self.OpenFile)
+        
+        self.saveFileAction = QAction("&Save File", self)
+        self.saveFileAction.triggered.connect(self.SaveFile)
 
-    def AddTabs(self):
+    def InitTabs(self):
         print("initalising tabs", tag="init", tag_color="magenta", color="white")
         self.tabs = QTabWidget(self)
         self.setCentralWidget(self.tabs)
         self.tabs.setTabPosition(QTabWidget.TabPosition.North)
         self.tabs.setTabsClosable(True)
+        
+        newTabButton = QPushButton(self) # the plus button
+        newTabButton.setText("+")
+        self.tabs.setCornerWidget(newTabButton)
+        
+        newTabButton.clicked.connect(self.NewPageButton)
         self.tabs.currentChanged.connect(self.OnTabChange)
         self.tabs.tabCloseRequested.connect(self.OnTabClose)
 
-    def AddMenubar(self):
+    def InitMenubar(self):
         print("initalising menu bar", tag="init", tag_color="magenta", color="white")
         self.menubar = QMenuBar(self)
         self.setMenuBar(self.menubar)
+        
         fileMenuButton = self.menubar.addMenu("File")
         fileMenuButton.addAction(self.newPageAction)
+        fileMenuButton.addAction(self.openFileAction)
 
-    def AddToolbar(self):
+    def InitToolbar(self):
         print("initalising tool bar", tag="init", tag_color="magenta", color="white")
         self.toolbar = QToolBar("main toolbar", self)
         self.toolbar.setIconSize(QSize(32, 32))
@@ -83,12 +101,45 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(self.newPageAction)
         self.toolbar.addSeparator()
         self.toolbar.addAction(self.newImageAction)
+        self.toolbar.addAction(self.openFileAction)
+        self.toolbar.addAction(self.saveFileAction)
+        
+    #       editor functionality
 
-    def AddPage(self, pageName="New Document"):
-        print("adding new page", tag="editor", tag_color="green", color="white")
-        self.currentEditor = TextEditor()
-        self.tabs.addTab(self.currentEditor, pageName)
+    def AddPage(self, filePath=""):#pageName="New Document"):
+        print("adding new page with path:", filePath or "None", tag="editor", tag_color="green", color="white")
+        self.currentEditor = TextEditor(filePath)
+        self.tabs.addTab(self.currentEditor, self.currentEditor.fileName)
         self.tabs.setCurrentWidget(self.currentEditor)
+        
+    def OpenFile(self):
+        print("attempting to open from file", tag="editor", tag_color="green", color="white")
+        selectedFile, extension = QFileDialog.getOpenFileName(self, "Open File")
+        fileContent = None
+        if selectedFile:
+            try:
+                with open(selectedFile, "r", encoding="utf-8") as tempFile:
+                    fileContent = tempFile.read()
+            except FileNotFoundError:
+                pass
+        if fileContent:
+            self.AddPage(selectedFile) #(os.path.basename(selectedFile))
+            self.currentEditor.setText(fileContent)
+        else:
+            print("opened file does not exist or no content", tag="info", tag_color="blue", color="white")
+            
+    def SaveFile(self):
+        print("attempting to save to file", tag="editor", tag_color="green", color="white")
+        
+        filePath = self.currentEditor.filePath
+        if not filePath:
+            filePath, _1 = QFileDialog.getSaveFileName(self, "Save File")
+        
+        if filePath:
+            # successfully found file path to save to
+            print(filePath)
+            with open(filePath, "w") as tempFile:
+                tempFile.write(self.currentEditor.toPlainText())
 
     #   signals
     def OnTabChange(self):
@@ -100,14 +151,15 @@ class MainWindow(QMainWindow):
         print("prompting close ", self.currentEditor, tag="editor", tag_color="green", color="yellow")
         
         closeTabDialogAnswer = TabCloseDialog().exec()
-        if closeTabDialogAnswer == QMessageBox.StandardButton.Save:
-            # self.currentEditor.save()
-            print("save", tag="info", tag_color="blue", color="white")
-        elif closeTabDialogAnswer == QMessageBox.StandardButton.Discard:
-            print("discard", tag="info", tag_color="blue", color="white")
-        elif closeTabDialogAnswer == QMessageBox.StandardButton.Cancel:
-            print("cancel", tag="info", tag_color="blue", color="white")
-            return
+        
+        match closeTabDialogAnswer:
+            case QMessageBox.StandardButton.Save:
+                print("save", tag="info", tag_color="blue", color="white")
+            case QMessageBox.StandardButton.Discard:
+                print("discard", tag="info", tag_color="blue", color="white")
+            case QMessageBox.StandardButton.Cancel:
+                print("cancel", tag="info", tag_color="blue", color="white")
+                return
 
         self.tabs.removeTab(tabIndex)
 

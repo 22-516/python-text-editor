@@ -1,3 +1,5 @@
+import os
+
 from PyQt6.QtCore import *  # temp
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
@@ -5,10 +7,15 @@ from PyQt6.QtWidgets import *
 import random
 
 class TextEditor(QTextEdit):
-    def __init__(self):
+    def __init__(self, filePath=""):
         super().__init__()
 
-        # self.setMaximumWidth(1000)
+        self.filePath = filePath      
+        _1, fileExtension = os.path.splitext(filePath)
+        self.fileName = os.path.basename(filePath) or "New Document"
+        self.fileExtension = fileExtension or None
+        
+        #print(self.filePath, self.fileName, self.fileExtension)
 
         randomTestingPageId = str(random.randint(1, 100)) #testing new tabs
         for i in range(9):
