@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import *
 
 from guicontroller import *  # FileContainer, TabCloseDialog
 from texteditor import *
+from historycontroller import *
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -138,6 +139,7 @@ class MainWindow(QMainWindow):
         if fileContent:
             self.AddPage(selectedFile) #(os.path.basename(selectedFile))
             self.currentEditor.setText(fileContent)
+            PrependRecentFileList(selectedFile)
         else:
             print("opened file does not exist or no content", tag="info", tag_color="blue", color="white")
             
@@ -191,7 +193,7 @@ class MainWindow(QMainWindow):
         self.currentEditor.insertImage()
         
     def OpenHomePage(self):
-        self.homeWindow = RecentFileWindow()
+        self.homeWindow = HomeWindow()
         self.homeWindow.show()
 
 

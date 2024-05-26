@@ -3,8 +3,9 @@ from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 
 import random
+from historycontroller import *
 class FileContainer(QWidget):
-    def __init__(self, filePath):
+    def __init__(self, filePath=""):
         super().__init__()
 
         print(filePath)
@@ -36,10 +37,11 @@ class FileContainer(QWidget):
 
     def onClicked2(self):
         print("clicked button 2", self.labelName)
+        RemoveFromRecentFileList(self.labelName)
         self.setParent(None)
         # self.hide()
 
-class RecentFileWindow(QTabWidget):
+class HomeWindow(QTabWidget):
     def __init__(self):
         super().__init__()
 
@@ -48,19 +50,24 @@ class RecentFileWindow(QTabWidget):
         self.setTabPosition(QTabWidget.TabPosition.North)
         self.setMovable(False)
         
+        #print(FetchRecentFileList())
+        
         recentTabPage = QScrollArea()
         recentTabPage.setAutoFillBackground(True)
-        #recentTabPage.setSizeAdjustPolicy()
         recentTabPage.setWidgetResizable(True)
         
         scrollingFrame = QFrame()
         scrollingFrame.setAutoFillBackground(True)
         
         scrollingVLayout = QVBoxLayout()
+        
+        for filePath in FetchRecentFileList():
+            print(filePath)
+            scrollingVLayout.addWidget(FileContainer(filePath))
 
-        for i in range(10):
-            tab1 = FileContainer(str(random.randrange(0,1000000)))
-            scrollingVLayout.addWidget(tab1)
+        #for i in range(10):
+        #    tab1 = FileContainer(str(random.randrange(0,1000000)))
+        #    scrollingVLayout.addWidget(tab1)
         
         scrollingFrame.setLayout(scrollingVLayout)
         recentTabPage.setWidget(scrollingFrame)
@@ -106,3 +113,6 @@ class TabCloseDialog(QMessageBox):
         )
         self.setDefaultButton(QMessageBox.StandardButton.Save)
         self.setEscapeButton(QMessageBox.StandardButton.Cancel)
+
+#def OpenFileFromHomePage():
+#    def 
