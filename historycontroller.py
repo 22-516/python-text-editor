@@ -15,9 +15,9 @@ def FetchRecentFileList():
     CheckIfHistoryFilesExist() # make sure the file exists before reading/writing
     with open(os.path.join("db", "recent.txt"), "r") as recentFileList:
         while line := recentFileList.readline():
-            print(line.rstrip())
+            #print(line.rstrip())
             fileList.append(line.rstrip())
-    print(fileList)
+    #print(fileList)
     return fileList
 
 def PrependRecentFileList(filePath=""):

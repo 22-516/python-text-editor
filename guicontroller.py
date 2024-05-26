@@ -8,7 +8,6 @@ class FileContainer(QWidget):
     def __init__(self, filePath=""):
         super().__init__()
 
-        print(filePath)
         self.labelName = filePath
 
         HButtonLayout = QHBoxLayout()
@@ -33,7 +32,7 @@ class FileContainer(QWidget):
         self.setLayout(HButtonLayout)
 
     def RemoveFileButton(self):
-        print("clicked remove file button", self.labelName)
+        #print("clicked remove file button", self.labelName)
         RemoveFromRecentFileList(self.labelName)
         self.setParent(None)
         # self.hide()
