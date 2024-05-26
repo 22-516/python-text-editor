@@ -21,11 +21,10 @@ def FetchRecentFileList():
     return fileList
 
 def PrependRecentFileList(filePath=""):
-    print(filePath)
-    
     CheckIfHistoryFilesExist() # make sure the file exists before reading/writing
+    RemoveFromRecentFileList(filePath) # remove previous entry
     with open(os.path.join("db", "recent.txt"), "r+") as recentFileList:
-        tempFile = recentFileList.read() # save file to memory so that we can prepend to the beginning of the file
+        tempFile = recentFileList.read() # save file to memory so that we can prepend to the beginning of the file                
         recentFileList.seek(0,0)
         recentFileList.write(filePath.rstrip("\r\n") + "\n" + tempFile)
         

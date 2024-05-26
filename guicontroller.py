@@ -18,13 +18,13 @@ class FileContainer(QWidget):
         VFileButtonFrame = QFrame()
 
         self.openFileButton = QPushButton("Open File", self)
-        self.openFileButton.clicked.connect(self.onClicked)
+        #self.openFileButton.clicked.connect(self.OpenFileButton)
 
-        self.openFileButton2 = QPushButton("Remove File", self)
-        self.openFileButton2.clicked.connect(self.onClicked2)
+        self.removeFileButton = QPushButton("Remove File", self)
+        self.removeFileButton.clicked.connect(self.RemoveFileButton)
 
         VFileButtonLayout.addWidget(self.openFileButton)
-        VFileButtonLayout.addWidget(self.openFileButton2)
+        VFileButtonLayout.addWidget(self.removeFileButton)
         VFileButtonFrame.setLayout(VFileButtonLayout)
 
         HButtonLayout.addWidget(fileNameLabel)
@@ -32,11 +32,8 @@ class FileContainer(QWidget):
 
         self.setLayout(HButtonLayout)
 
-    def onClicked(self):
-        print("clicked button", self.labelName)
-
-    def onClicked2(self):
-        print("clicked button 2", self.labelName)
+    def RemoveFileButton(self):
+        print("clicked remove file button", self.labelName)
         RemoveFromRecentFileList(self.labelName)
         self.setParent(None)
         # self.hide()
@@ -52,27 +49,23 @@ class HomeWindow(QTabWidget):
         
         #print(FetchRecentFileList())
         
-        recentTabPage = QScrollArea()
-        recentTabPage.setAutoFillBackground(True)
-        recentTabPage.setWidgetResizable(True)
+        self.recentTabPage = QScrollArea()
+        self.recentTabPage.setAutoFillBackground(True)
+        self.recentTabPage.setWidgetResizable(True)
         
-        scrollingFrame = QFrame()
-        scrollingFrame.setAutoFillBackground(True)
+        self.recentTabScrollingFrame = QFrame()
+        self.recentTabScrollingFrame.setAutoFillBackground(True)
         
-        scrollingVLayout = QVBoxLayout()
+        self.recentTabVerticalLayout = QVBoxLayout()
         
-        for filePath in FetchRecentFileList():
+        '''for filePath in FetchRecentFileList():
             print(filePath)
-            scrollingVLayout.addWidget(FileContainer(filePath))
-
-        #for i in range(10):
-        #    tab1 = FileContainer(str(random.randrange(0,1000000)))
-        #    scrollingVLayout.addWidget(tab1)
+            scrollingVLayout.addWidget(FileContainer(filePath))'''
+            
+        self.recentTabScrollingFrame.setLayout(self.recentTabVerticalLayout)
+        self.recentTabPage.setWidget(self.recentTabScrollingFrame)
         
-        scrollingFrame.setLayout(scrollingVLayout)
-        recentTabPage.setWidget(scrollingFrame)
-        
-        self.addTab(recentTabPage, "Recent")
+        self.addTab(self.recentTabPage, "Recent")
 
 
 '''class TabCloseDialog(QDialog):

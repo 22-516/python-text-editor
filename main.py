@@ -121,14 +121,15 @@ class MainWindow(QMainWindow):
     #       editor functionality
 
     def AddPage(self, filePath=""):#pageName="New Document"):
-        print("adding new page with path:", filePath or "None", tag="editor", tag_color="green", color="white")
+        print("adding new page with path metadata:", filePath or "None", tag="editor", tag_color="green", color="white")
         self.currentEditor = TextEditor(filePath)
         self.tabs.addTab(self.currentEditor, self.currentEditor.fileName)
         self.tabs.setCurrentWidget(self.currentEditor)
 
-    def OpenFile(self):
+    def OpenFile(self, selectedFile=""):
         print("attempting to open from file", tag="editor", tag_color="green", color="white")
-        selectedFile, extension = QFileDialog.getOpenFileName(self, "Open File")
+        if not selectedFile:
+            selectedFile, extension = QFileDialog.getOpenFileName(self, "Open File")
         fileContent = None
         if selectedFile:
             try:
@@ -194,6 +195,12 @@ class MainWindow(QMainWindow):
         
     def OpenHomePage(self):
         self.homeWindow = HomeWindow()
+        
+        for filePath in FetchRecentFileList():
+            print(filePath)
+            self.homeWindow.recentTabVerticalLayout.addWidget(tempContainer := FileContainer(filePath))
+            tempContainer.openFileButton.clicked.connect(partial(self.OpenFile, tempContainer.labelName)) # so the buttons have functionality
+        
         self.homeWindow.show()
 
 
