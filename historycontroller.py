@@ -11,8 +11,6 @@ def CheckIfHistoryFilesExist(): # make sure the file exists before reading/writi
 
 def FetchRecentFileList():
     fileList = []
-    
-    CheckIfHistoryFilesExist() # make sure the file exists before reading/writing
     with open(os.path.join("db", "recent.txt"), "r") as recentFileList:
         while line := recentFileList.readline():
             #print(line.rstrip())
@@ -21,7 +19,6 @@ def FetchRecentFileList():
     return fileList
 
 def PrependRecentFileList(filePath=""):
-    CheckIfHistoryFilesExist() # make sure the file exists before reading/writing
     RemoveFromRecentFileList(filePath) # remove previous entry
     with open(os.path.join("db", "recent.txt"), "r+") as recentFileList:
         tempFile = recentFileList.read() # save file to memory so that we can prepend to the beginning of the file                
@@ -29,7 +26,6 @@ def PrependRecentFileList(filePath=""):
         recentFileList.write(filePath.rstrip("\r\n") + "\n" + tempFile)
         
 def RemoveFromRecentFileList(filePath=""):
-    CheckIfHistoryFilesExist() # make sure the file exists before reading/writing
     print("removing from recent file list", filePath)
     
     with open(os.path.join("db", "recent.txt"), "r+") as recentFileList:

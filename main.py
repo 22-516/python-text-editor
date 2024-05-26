@@ -194,6 +194,7 @@ class MainWindow(QMainWindow):
         self.currentEditor.insertImage()
         
     def OpenHomePage(self):
+        CheckIfHistoryFilesExist() # make sure the file exists before reading/writing
         self.homeWindow = HomeWindow()
         
         for filePath in FetchRecentFileList():
