@@ -1,4 +1,5 @@
 import os
+from print_color import print
 
 from PyQt6.QtCore import * #temp
 from PyQt6.QtGui import *
@@ -15,7 +16,6 @@ def FetchRecentFileList():
         while line := recentFileList.readline():
             #print(line.rstrip())
             fileList.append(line.rstrip())
-    #print(fileList)
     return fileList
 
 def PrependRecentFileList(filePath=""):
@@ -24,9 +24,9 @@ def PrependRecentFileList(filePath=""):
         tempFile = recentFileList.read() # save file to memory so that we can prepend to the beginning of the file                
         recentFileList.seek(0,0)
         recentFileList.write(filePath.rstrip("\r\n") + "\n" + tempFile)
-        
+
 def RemoveFromRecentFileList(filePath=""):
-    print("removing from recent file list", filePath)
+    print("removing from recent file list", filePath, tag="history", tag_color="yellow", color="white")
     
     with open(os.path.join("db", "recent.txt"), "r+") as recentFileList:
         fileContent = recentFileList.readlines()
