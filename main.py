@@ -103,13 +103,6 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(self.underlineAction)
         self.toolbar.addAction(self.italicAction)
 
-        # self.toolbar.addAction(self.newPageAction)
-        # self.toolbar.addSeparator()
-        # self.toolbar.addAction(self.newImageAction)
-        # self.toolbar.addAction(self.openFileAction)
-        # self.toolbar.addAction(self.saveFileAction)
-        # self.toolbar.addAction(self.homePageAction)
-
     #       editor functionality
 
     def AddPage(self, filePath=""):#pageName="New Document"):
