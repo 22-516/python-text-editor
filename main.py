@@ -24,25 +24,6 @@ class MainWindow(QMainWindow):
         self.setStatusBar(self.status_bar)
         self.status_bar.showMessage("Ready", 5000)'''
 
-        '''recentTabPage = QScrollArea()
-        recentTabPage.setAutoFillBackground(True)
-        recentTabPage.setWidgetResizable(True)
-
-        scrollingFrame = QFrame()
-        scrollingFrame.setAutoFillBackground(True)
-
-        scrollingVLayout = QVBoxLayout()
-
-        for i in range(10):
-            tab1 = FileContainer(str(random.randrange(0, 1000000)))
-            scrollingVLayout.addWidget(tab1)
-
-        scrollingFrame.setLayout(scrollingVLayout)
-        recentTabPage.setWidget(scrollingFrame)
-
-        self.tabs.addTab(recentTabPage, "Recent")
-        self.setCentralWidget(self.tabs)'''
-
     #   functions
     #       initalisation
     def InitaliseEditorWindow(self):
@@ -58,9 +39,6 @@ class MainWindow(QMainWindow):
         # self.button_action.setToolTip("tooltip")
         self.newPageAction.triggered.connect(self.NewPageButton)
 
-        self.newImageAction = QAction("&Insert Test Image", self)
-        self.newImageAction.triggered.connect(self.InsertTestImage)
-
         self.openFileAction = QAction("&Open", self)
         self.openFileAction.triggered.connect(self.OpenFile)
 
@@ -72,6 +50,18 @@ class MainWindow(QMainWindow):
 
         self.homePageAction = QAction("&Home", self)
         self.homePageAction.triggered.connect(self.OpenHomePage)
+
+        self.newImageAction = QAction("&Insert Test Image", self)
+        self.newImageAction.triggered.connect(self.InsertTestImage)
+        # text formatting actions
+        self.boldAction = QAction("&Bold", self)
+        self.boldAction.triggered.connect(self.FormatTextBold)
+
+        self.underlineAction = QAction("&Underline", self)
+        self.underlineAction.triggered.connect(self.FormatTextUnderline)
+
+        self.italicAction = QAction("&Italics", self)
+        self.italicAction.triggered.connect(self.FormatTextItalics)
 
     def InitTabs(self):
         print("initalising tabs", tag="init", tag_color="magenta", color="white")
@@ -108,6 +98,10 @@ class MainWindow(QMainWindow):
         self.addToolBar(self.toolbar)
 
         self.toolbar.addAction(self.newImageAction)
+
+        self.toolbar.addAction(self.boldAction)
+        self.toolbar.addAction(self.underlineAction)
+        self.toolbar.addAction(self.italicAction)
 
         # self.toolbar.addAction(self.newPageAction)
         # self.toolbar.addSeparator()
@@ -159,12 +153,19 @@ class MainWindow(QMainWindow):
 
         if tempFilePath:
             # successfully found file path to save to
-            # print(tempFilePath)
-            with open(tempFilePath, "w", encoding="utf-8") as tempFile:
-                tempFile.write(self.currentEditor.toPlainText())
-                self.currentEditor.SetFilePath(tempFilePath)
-                self.tabs.setTabText(self.tabs.currentIndex(), self.currentEditor.fileName)
-                return True
+            with open(tempFilePath, "r", encoding="utf-8") as tempFile: #save copy in memory before writing
+                fileContent = tempFile.read()
+            try:
+                with open(tempFilePath, "w", encoding="utf-8") as tempFile:
+                    tempFile.write(self.currentEditor.toPlainText())
+                    self.currentEditor.SetFilePath(tempFilePath)
+                    self.tabs.setTabText(self.tabs.currentIndex(), self.currentEditor.fileName)
+                    return True
+            except UnicodeEncodeError:
+                with open(tempFilePath, "w", encoding="utf-8") as tempFile:
+                    tempFile.write(fileContent)
+                    print("unicode encoding error while trying to save", str(tempFilePath), str(fileContent), tag="error", tag_color="red", color="white")
+                    return False
         print("save unsuccessful", str(tempFilePath), tag="info", tag_color="blue", color="white")
         return False
 
@@ -214,6 +215,13 @@ class MainWindow(QMainWindow):
 
         self.homeWindow.show()
 
+    # text formatting actions
+    def FormatTextBold(self):
+        self.currentEditor.setFontWeight(QFont.Weight.Bold if self.currentEditor.fontWeight() == QFont.Weight.Normal else QFont.Weight.Normal)
+    def FormatTextUnderline(self):
+        self.currentEditor.setFontUnderline(not self.currentEditor.fontUnderline())
+    def FormatTextItalics(self):
+        self.currentEditor.setFontItalic(not self.currentEditor.fontItalic())
 
 app = QApplication(sys.argv)
 
