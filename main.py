@@ -143,7 +143,7 @@ class MainWindow(QMainWindow):
                     fileContent = tempFile.read()
             except FileNotFoundError:
                 pass
-        if fileContent:
+        if fileContent or (not fileContent and selectedFile): #if file selected but empty contents (no text)
             self.AddPage(selectedFile) #(os.path.basename(selectedFile))
             self.currentEditor.setText(fileContent)
             PrependRecentFileList(selectedFile)
@@ -160,7 +160,7 @@ class MainWindow(QMainWindow):
         if tempFilePath:
             # successfully found file path to save to
             # print(tempFilePath)
-            with open(tempFilePath, "w") as tempFile:
+            with open(tempFilePath, "w", encoding="utf-8") as tempFile:
                 tempFile.write(self.currentEditor.toPlainText())
                 self.currentEditor.SetFilePath(tempFilePath)
                 self.tabs.setTabText(self.tabs.currentIndex(), self.currentEditor.fileName)
