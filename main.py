@@ -1,4 +1,5 @@
 import sys
+import re
 from functools import partial
 from print_color import print
 
@@ -114,7 +115,7 @@ class MainWindow(QMainWindow):
     def OpenFile(self, selectedFile=""):
         print("attempting to open from file", tag="info", tag_color="blue", color="white")
         if not selectedFile:
-            selectedFile, extension = QFileDialog.getOpenFileName(self, "Open File")
+            selectedFile, selectedFilter = QFileDialog.getOpenFileName(self, "Open File")
 
         for tab in range(self.tabs.count()):
             # print(self.tabs.widget(tab).filePath)
@@ -141,24 +142,33 @@ class MainWindow(QMainWindow):
         print("attempting to save to file, new file:", saveAs, tag="info", tag_color="blue", color="white")
 
         tempFilePath = self.currentEditor.filePath
+        fileContent = None
         if not tempFilePath or saveAs:
-            tempFilePath, _1 = QFileDialog.getSaveFileName(self, "Save File")
+            supportedFileFilter = "Text Files (*.txt);;Word Document (*.docx)"
+            tempFilePath, selectedFilter = QFileDialog.getSaveFileName(self, "Save File", "", supportedFileFilter)
+            selectedExtension = re.search('\((.+?)\)', selectedFilter).group(1).replace('*',"") # add extension so file is saved with the selected extension
+            #print(selectedFilter, selectedExtension)
+            #print(os.path.splitext(tempFilePath))
+            if not os.path.splitext(tempFilePath)[1]:
+                print(tempFilePath, selectedExtension)
+                tempFilePath = tempFilePath + selectedExtension
+                print(tempFilePath, selectedExtension)
 
         if tempFilePath:
             # successfully found file path to save to
-            with open(tempFilePath, "r", encoding="utf-8") as tempFile: #save copy in memory before writing
-                fileContent = tempFile.read()
+            if os.path.exists(tempFilePath):
+                with open(tempFilePath, "r", encoding="utf-8") as tempFile: #save copy in memory before writing
+                    fileContent = tempFile.read()
             try:
                 with open(tempFilePath, "w", encoding="utf-8") as tempFile:
                     tempFile.write(self.currentEditor.toPlainText())
                     self.currentEditor.SetFilePath(tempFilePath)
                     self.tabs.setTabText(self.tabs.currentIndex(), self.currentEditor.fileName)
                     return True
-            except UnicodeEncodeError:
+            except:
                 with open(tempFilePath, "w", encoding="utf-8") as tempFile:
                     tempFile.write(fileContent)
-                    print("unicode encoding error while trying to save", str(tempFilePath), str(fileContent), tag="error", tag_color="red", color="white")
-                    return False
+                    print("error while trying to save", str(tempFilePath), str(fileContent), tag="error", tag_color="red", color="white")
         print("save unsuccessful", str(tempFilePath), tag="info", tag_color="blue", color="white")
         return False
 
