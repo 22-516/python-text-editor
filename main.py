@@ -55,14 +55,14 @@ class MainWindow(QMainWindow):
         self.newImageAction = QAction("&Insert Test Image", self)
         self.newImageAction.triggered.connect(self.InsertTestImage)
         # text formatting actions
-        self.boldAction = QAction("&Bold", self)
-        self.boldAction.triggered.connect(self.FormatTextBold)
+        self.textBoldAction = QAction("&Bold", self)
+        self.textBoldAction.triggered.connect(self.FormatTextBold)
 
-        self.underlineAction = QAction("&Underline", self)
-        self.underlineAction.triggered.connect(self.FormatTextUnderline)
+        self.textUnderlineAction = QAction("&Underline", self)
+        self.textUnderlineAction.triggered.connect(self.FormatTextUnderline)
 
-        self.italicAction = QAction("&Italics", self)
-        self.italicAction.triggered.connect(self.FormatTextItalics)
+        self.textItalicAction = QAction("&Italics", self)
+        self.textItalicAction.triggered.connect(self.FormatTextItalics)
 
     def InitTabs(self):
         print("initalising tabs", tag="init", tag_color="magenta", color="white")
@@ -98,11 +98,11 @@ class MainWindow(QMainWindow):
         self.toolbar.setIconSize(QSize(32, 32))
         self.addToolBar(self.toolbar)
 
-        self.toolbar.addAction(self.newImageAction)
+        self.toolbar.addAction(self.newImageAction) # for image testing
 
-        self.toolbar.addAction(self.boldAction)
-        self.toolbar.addAction(self.underlineAction)
-        self.toolbar.addAction(self.italicAction)
+        self.toolbar.addAction(self.textBoldAction)
+        self.toolbar.addAction(self.textUnderlineAction)
+        self.toolbar.addAction(self.textItalicAction)
 
     #       editor functionality
 
@@ -113,6 +113,7 @@ class MainWindow(QMainWindow):
         self.tabs.setCurrentWidget(self.currentEditor)
 
     def OpenFile(self, selectedFile=""):
+        CheckIfHistoryFilesExist()
         print("attempting to open from file", tag="info", tag_color="blue", color="white")
         if not selectedFile:
             selectedFile, selectedFilter = QFileDialog.getOpenFileName(self, "Open File")
@@ -139,23 +140,23 @@ class MainWindow(QMainWindow):
             print("opened file does not exist or no content", tag="info", tag_color="blue", color="white")
 
     def SaveFile(self, saveAs=False):
+        CheckIfHistoryFilesExist()
         print("attempting to save to file, new file:", saveAs, tag="info", tag_color="blue", color="white")
 
         tempFilePath = self.currentEditor.filePath
+        selectedExtension = ".txt"
         fileContent = None
         if not tempFilePath or saveAs:
-            supportedFileFilter = "Text Files (*.txt);;Word Document (*.docx)"
+            supportedFileFilter = "Text File (*.txt);;Word Document (*.docx)"
             tempFilePath, selectedFilter = QFileDialog.getSaveFileName(self, "Save File", "", supportedFileFilter)
-            selectedExtension = re.search('\((.+?)\)', selectedFilter).group(1).replace('*',"") # add extension so file is saved with the selected extension
-            #print(selectedFilter, selectedExtension)
-            #print(os.path.splitext(tempFilePath))
-            if not os.path.splitext(tempFilePath)[1]:
-                print(tempFilePath, selectedExtension)
+            selectedExtension = re.search(r'\((.+?)\)', selectedFilter or supportedFileFilter).group(1).replace('*',"") # add extension so file is saved with the selected extension
+            # if not os.path.splitext(tempFilePath)[1]:
+            if os.path.splitext(tempFilePath)[1] != selectedExtension:
                 tempFilePath = tempFilePath + selectedExtension
-                print(tempFilePath, selectedExtension)
 
         if tempFilePath:
             # successfully found file path to save to
+            PrependRecentFileList(tempFilePath)
             if os.path.exists(tempFilePath):
                 with open(tempFilePath, "r", encoding="utf-8") as tempFile: #save copy in memory before writing
                     fileContent = tempFile.read()
@@ -166,7 +167,7 @@ class MainWindow(QMainWindow):
                     self.tabs.setTabText(self.tabs.currentIndex(), self.currentEditor.fileName)
                     return True
             except:
-                with open(tempFilePath, "w", encoding="utf-8") as tempFile:
+                with open(tempFilePath, "w", encoding="utf-8") as tempFile: # replace with old content if possible
                     tempFile.write(fileContent)
                     print("error while trying to save", str(tempFilePath), str(fileContent), tag="error", tag_color="red", color="white")
         print("save unsuccessful", str(tempFilePath), tag="info", tag_color="blue", color="white")
@@ -193,9 +194,9 @@ class MainWindow(QMainWindow):
                 print("cancel", tag="info", tag_color="blue", color="white")
                 return
 
-        self.tabs.removeTab(tabIndex)
+        self.tabs.removeTab(tabIndex) # close tab
 
-        if self.tabs.count() <= 0: #ensure always one editor page available
+        if self.tabs.count() <= 0: # ensure always one editor page available
             self.AddPage()
 
     #   actions
@@ -221,8 +222,10 @@ class MainWindow(QMainWindow):
     # text formatting actions
     def FormatTextBold(self):
         self.currentEditor.setFontWeight(QFont.Weight.Bold if self.currentEditor.fontWeight() == QFont.Weight.Normal else QFont.Weight.Normal)
+    
     def FormatTextUnderline(self):
         self.currentEditor.setFontUnderline(not self.currentEditor.fontUnderline())
+    
     def FormatTextItalics(self):
         self.currentEditor.setFontItalic(not self.currentEditor.fontItalic())
 
