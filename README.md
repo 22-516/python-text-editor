@@ -1,3 +1,3 @@
 python text editor
 
-Fugue Icons from Yusuke Kamiyamane at https://p.yusukekamiyamane.com/
+Some icons by Yusuke Kamiyamane. Licensed under a Creative Commons Attribution 3.0 License.
