@@ -57,12 +57,18 @@ class MainWindow(QMainWindow):
         # text formatting actions
         self.textBoldAction = QAction("&Bold", self)
         self.textBoldAction.triggered.connect(self.FormatTextBold)
+        self.textBoldAction.setCheckable(True)
+        self.textBoldAction.setIcon(QIcon(os.path.join("images", "icons", "edit-bold.png")))
 
         self.textUnderlineAction = QAction("&Underline", self)
         self.textUnderlineAction.triggered.connect(self.FormatTextUnderline)
+        self.textUnderlineAction.setCheckable(True)
+        self.textUnderlineAction.setIcon(QIcon(os.path.join("images", "icons", "edit-underline.png")))
 
-        self.textItalicAction = QAction("&Italics", self)
+        self.textItalicAction = QAction("&Italic", self)
         self.textItalicAction.triggered.connect(self.FormatTextItalics)
+        self.textItalicAction.setCheckable(True)
+        self.textItalicAction.setIcon(QIcon(os.path.join("images", "icons", "edit-italic.png")))
 
     def InitTabs(self):
         print("initalising tabs", tag="init", tag_color="magenta", color="white")
@@ -95,7 +101,7 @@ class MainWindow(QMainWindow):
     def InitToolbar(self):
         print("initalising tool bar", tag="init", tag_color="magenta", color="white")
         self.toolbar = QToolBar("main toolbar", self)
-        self.toolbar.setIconSize(QSize(32, 32))
+        #self.toolbar.setIconSize(QSize(32, 32))
         self.addToolBar(self.toolbar)
 
         self.toolbar.addAction(self.newImageAction) # for image testing
@@ -111,6 +117,8 @@ class MainWindow(QMainWindow):
         self.currentEditor = TextEditor(filePath)
         self.tabs.addTab(self.currentEditor, self.currentEditor.fileName)
         self.tabs.setCurrentWidget(self.currentEditor)
+        
+        self.currentEditor.currentCharFormatChanged.connect(self.OnSelectionChange)
 
     def OpenFile(self, selectedFile=""):
         CheckIfHistoryFilesExist()
@@ -174,6 +182,11 @@ class MainWindow(QMainWindow):
         return False
 
     #   signals
+    def OnSelectionChange(self): # check all qaction for continuity
+        self.textBoldAction.setChecked(True if not self.currentEditor.fontWeight() == QFont.Weight.Normal else False)
+        self.textUnderlineAction.setChecked(True if self.currentEditor.fontUnderline() else False)
+        self.textItalicAction.setChecked(True if self.currentEditor.fontItalic() else False)
+    
     def OnTabChange(self):
         self.currentEditor = self.tabs.currentWidget()
         print("tab changed to", self.currentEditor, tag="editor", tag_color="green", color="white")
@@ -222,10 +235,10 @@ class MainWindow(QMainWindow):
     # text formatting actions
     def FormatTextBold(self):
         self.currentEditor.setFontWeight(QFont.Weight.Bold if self.currentEditor.fontWeight() == QFont.Weight.Normal else QFont.Weight.Normal)
-    
+
     def FormatTextUnderline(self):
         self.currentEditor.setFontUnderline(not self.currentEditor.fontUnderline())
-    
+
     def FormatTextItalics(self):
         self.currentEditor.setFontItalic(not self.currentEditor.fontItalic())
 
