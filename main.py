@@ -101,7 +101,7 @@ class MainWindow(QMainWindow):
     def InitToolbar(self):
         print("initalising tool bar", tag="init", tag_color="magenta", color="white")
         self.toolbar = QToolBar("main toolbar", self)
-        #self.toolbar.setIconSize(QSize(32, 32))
+        # self.toolbar.setIconSize(QSize(32, 32))
         self.addToolBar(self.toolbar)
 
         self.toolbar.addAction(self.newImageAction) # for image testing
@@ -117,7 +117,7 @@ class MainWindow(QMainWindow):
         self.currentEditor = TextEditor(filePath)
         self.tabs.addTab(self.currentEditor, self.currentEditor.fileName)
         self.tabs.setCurrentWidget(self.currentEditor)
-        
+
         self.currentEditor.currentCharFormatChanged.connect(self.OnSelectionChange)
 
     def OpenFile(self, selectedFile=""):
@@ -186,7 +186,7 @@ class MainWindow(QMainWindow):
         self.textBoldAction.setChecked(True if not self.currentEditor.fontWeight() == QFont.Weight.Normal else False)
         self.textUnderlineAction.setChecked(True if self.currentEditor.fontUnderline() else False)
         self.textItalicAction.setChecked(True if self.currentEditor.fontItalic() else False)
-    
+
     def OnTabChange(self):
         self.currentEditor = self.tabs.currentWidget()
         print("tab changed to", self.currentEditor, tag="editor", tag_color="green", color="white")
@@ -205,6 +205,9 @@ class MainWindow(QMainWindow):
                 print("discard", tag="info", tag_color="blue", color="white")
             case QMessageBox.StandardButton.Cancel:
                 print("cancel", tag="info", tag_color="blue", color="white")
+                return
+            case _:
+                print("data not saved", tag="info", tag_color="blue", color="white")
                 return
 
         self.tabs.removeTab(tabIndex) # close tab
