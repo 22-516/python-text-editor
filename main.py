@@ -30,6 +30,7 @@ class MainWindow(QMainWindow):
     def InitaliseEditorWindow(self):
         print("initalising editor window", tag="init", tag_color="magenta", color="white")
         self.InitActions()
+        self.InitObjects()
         self.InitTabs()
         self.InitMenubar()
         self.InitToolbar()
@@ -69,6 +70,12 @@ class MainWindow(QMainWindow):
         self.textItalicAction.triggered.connect(self.FormatTextItalics)
         self.textItalicAction.setCheckable(True)
         self.textItalicAction.setIcon(QIcon(os.path.join("images", "icons", "edit-italic.png")))
+        
+    def InitObjects(self):
+        self.fontComboBoxWidget = QFontComboBox(self)
+        self.fontComboBoxWidget.currentFontChanged.connect(self.OnFontComboboxChanged)
+        self.fontComboBoxWidget.setWritingSystem(QFontDatabase.WritingSystem.Latin) # for inital testing with english fonts
+        #self.fontComboBoxWidget
 
     def InitTabs(self):
         print("initalising tabs", tag="init", tag_color="magenta", color="white")
@@ -109,6 +116,8 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(self.textBoldAction)
         self.toolbar.addAction(self.textUnderlineAction)
         self.toolbar.addAction(self.textItalicAction)
+        
+        self.toolbar.addWidget(self.fontComboBoxWidget)
 
     #       editor functionality
 
@@ -186,9 +195,11 @@ class MainWindow(QMainWindow):
         self.textBoldAction.setChecked(True if not self.currentEditor.fontWeight() == QFont.Weight.Normal else False)
         self.textUnderlineAction.setChecked(True if self.currentEditor.fontUnderline() else False)
         self.textItalicAction.setChecked(True if self.currentEditor.fontItalic() else False)
+        self.fontComboBoxWidget.setCurrentFont(self.currentEditor.currentFont())
 
     def OnTabChange(self):
         self.currentEditor = self.tabs.currentWidget()
+        self.OnSelectionChange() # update text formatting qactions checked status upon changing tabs to preserve continuity between tabs
         print("tab changed to", self.currentEditor, tag="editor", tag_color="green", color="white")
 
     def OnTabClose(self, tabIndex):
@@ -214,6 +225,9 @@ class MainWindow(QMainWindow):
 
         if self.tabs.count() <= 0: # ensure always one editor page available
             self.AddPage()
+            
+    def OnFontComboboxChanged(self, newFont):
+        self.currentEditor.OnFontChanged(newFont)
 
     #   actions
     def NewPageButton(self):
@@ -222,7 +236,7 @@ class MainWindow(QMainWindow):
 
     def InsertTestImage(self):
         print("inserting test image", self.currentEditor, tag="editor", tag_color="green", color="white")
-        self.currentEditor.insertImage()
+        self.currentEditor.InsertImage()
 
     def OpenHomePage(self):
         CheckIfHistoryFilesExist() # make sure the file exists before reading/writing
@@ -236,14 +250,26 @@ class MainWindow(QMainWindow):
         self.homeWindow.show()
 
     # text formatting actions
-    def FormatTextBold(self):
+    '''    def FormatTextBold(self):
         self.currentEditor.setFontWeight(QFont.Weight.Bold if self.currentEditor.fontWeight() == QFont.Weight.Normal else QFont.Weight.Normal)
 
     def FormatTextUnderline(self):
         self.currentEditor.setFontUnderline(not self.currentEditor.fontUnderline())
 
     def FormatTextItalics(self):
-        self.currentEditor.setFontItalic(not self.currentEditor.fontItalic())
+        self.currentEditor.setFontItalic(not self.currentEditor.fontItalic())'''
+
+    def FormatTextBold(self):
+        self.currentEditor.ToggleSelectedBold()
+
+    def FormatTextUnderline(self):
+        self.currentEditor.ToggleSelectedUnderline()
+
+    def FormatTextItalics(self):
+        self.currentEditor.ToggleSelectedItalics()
+        
+    def FormatTextFont(self, newFont):
+        self.currentEditor.OnFontChanged(newFont)
 
 app = QApplication(sys.argv)
 

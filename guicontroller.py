@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import *
 
 import random
 from historycontroller import *
+
 class FileContainer(QWidget):
     def __init__(self, filePath=""):
         super().__init__()
