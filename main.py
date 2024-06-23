@@ -195,7 +195,8 @@ class MainWindow(QMainWindow):
         self.textBoldAction.setChecked(True if not self.currentEditor.fontWeight() == QFont.Weight.Normal else False)
         self.textUnderlineAction.setChecked(True if self.currentEditor.fontUnderline() else False)
         self.textItalicAction.setChecked(True if self.currentEditor.fontItalic() else False)
-        self.fontComboBoxWidget.setCurrentFont(self.currentEditor.currentFont())
+        with QSignalBlocker(self.fontComboBoxWidget): # block font combobox signal to prevent loop where upon selection change, font combobox changes font which changes font of selected text
+            self.fontComboBoxWidget.setCurrentFont(self.currentEditor.currentFont())
 
     def OnTabChange(self):
         self.currentEditor = self.tabs.currentWidget()
