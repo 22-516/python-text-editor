@@ -73,7 +73,7 @@ class MainWindow(QMainWindow):
         
     def InitObjects(self):
         self.fontComboBoxWidget = QFontComboBox(self)
-        self.fontComboBoxWidget.currentFontChanged.connect(self.OnFontComboboxChanged)
+        self.fontComboBoxWidget.currentFontChanged.connect(self.FormatTextFont)
         self.fontComboBoxWidget.setWritingSystem(QFontDatabase.WritingSystem.Latin) # for inital testing with english fonts
         #self.fontComboBoxWidget
 
@@ -226,9 +226,6 @@ class MainWindow(QMainWindow):
 
         if self.tabs.count() <= 0: # ensure always one editor page available
             self.AddPage()
-            
-    def OnFontComboboxChanged(self, newFont):
-        self.currentEditor.OnFontChanged(newFont)
 
     #   actions
     def NewPageButton(self):
