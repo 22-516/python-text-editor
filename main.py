@@ -130,14 +130,13 @@ class MainWindow(QMainWindow):
         self.currentEditor.currentCharFormatChanged.connect(self.OnSelectionChange)
 
     def OpenFile(self, selectedFile=""):
-        CheckIfHistoryFilesExist()
         print("attempting to open from file", tag="info", tag_color="blue", color="white")
         if not selectedFile:
             selectedFile, selectedFilter = QFileDialog.getOpenFileName(self, "Open File")
 
         for tab in range(self.tabs.count()):
-            # print(self.tabs.widget(tab).filePath)
             if selectedFile == self.tabs.widget(tab).filePath:
+                PrependRecentFileList(selectedFile)
                 print("file with path", selectedFile, "already open in editor, switching tabs" or "None", tag="editor", tag_color="green", color="white")
                 self.tabs.setCurrentIndex(tab)
                 return
@@ -157,7 +156,6 @@ class MainWindow(QMainWindow):
             print("opened file does not exist or no content", tag="info", tag_color="blue", color="white")
 
     def SaveFile(self, saveAs=False):
-        CheckIfHistoryFilesExist()
         print("attempting to save to file, new file:", saveAs, tag="info", tag_color="blue", color="white")
 
         tempFilePath = self.currentEditor.filePath
