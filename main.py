@@ -167,9 +167,9 @@ class MainWindow(QMainWindow):
             selectedExtension = re.search(r'\((.+?)\)', selectedFilter or supportedFileFilter).group(1).replace('*',"") # add extension so file is saved with the selected extension
             # if not os.path.splitext(tempFilePath)[1]:
             if os.path.splitext(tempFilePath)[1] != selectedExtension:
-                tempFilePath = tempFilePath + selectedExtension
+                tempFilePath = (tempFilePath + selectedExtension).strip()
 
-        if tempFilePath:
+        if tempFilePath and tempFilePath != selectedExtension: # if the string is not selected extension (checks if the user selected something to save as)
             # successfully found file path to save to
             PrependRecentFileList(tempFilePath)
             if os.path.exists(tempFilePath):
@@ -190,11 +190,12 @@ class MainWindow(QMainWindow):
 
     #   signals
     def OnSelectionChange(self): # check all qaction for continuity
-        self.textBoldAction.setChecked(True if not self.currentEditor.fontWeight() == QFont.Weight.Normal else False)
-        self.textUnderlineAction.setChecked(True if self.currentEditor.fontUnderline() else False)
-        self.textItalicAction.setChecked(True if self.currentEditor.fontItalic() else False)
-        with QSignalBlocker(self.fontComboBoxWidget): # block font combobox signal to prevent loop where upon selection change, font combobox changes font which changes font of selected text
-            self.fontComboBoxWidget.setCurrentFont(self.currentEditor.currentFont())
+        if self.currentEditor: # if the editor exists (prevents issues when tab is closed)
+            self.textBoldAction.setChecked(True if not self.currentEditor.fontWeight() == QFont.Weight.Normal else False)
+            self.textUnderlineAction.setChecked(True if self.currentEditor.fontUnderline() else False)
+            self.textItalicAction.setChecked(True if self.currentEditor.fontItalic() else False)
+            with QSignalBlocker(self.fontComboBoxWidget): # block font combobox signal to prevent loop where upon selection change, font combobox changes font which changes font of selected text
+                self.fontComboBoxWidget.setCurrentFont(self.currentEditor.currentFont())
 
     def OnTabChange(self):
         self.currentEditor = self.tabs.currentWidget()

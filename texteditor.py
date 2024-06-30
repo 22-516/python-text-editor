@@ -32,21 +32,21 @@ class TextEditor(QTextEdit):
     # text formatting
 
     def ToggleSelectedBold(self):
-        print(self.fontWeight())
+        #print(self.fontWeight())
         self.setFontWeight(newFontWeight := QFont.Weight.Bold if self.fontWeight() == QFont.Weight.Normal else QFont.Weight.Normal)
-        print(newFontWeight)
+        #print(newFontWeight)
         return newFontWeight
 
     def ToggleSelectedUnderline(self):
-        print(self.fontUnderline())
+        #print(self.fontUnderline())
         self.setFontUnderline(newFontUnderline := not self.fontUnderline())
-        print(newFontUnderline)
+        #print(newFontUnderline)
         return newFontUnderline
 
     def ToggleSelectedItalics(self):
-        print(self.fontItalic())
+        #print(self.fontItalic())
         self.setFontItalic(newFontItalics := not self.fontItalic())
-        print(newFontItalics)
+        #print(newFontItalics)
         return newFontItalics
     
     def OnFontChanged(self, newFont : QFont):
