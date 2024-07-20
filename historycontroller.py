@@ -5,12 +5,11 @@ from PyQt6.QtCore import * #temp
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 
-def CheckIfHistoryFilesExist(): # make sure the file exists and all recent files exist before reading/writing
-    currentDir = os.getcwd()
-    finalDir = os.path.join(currentDir, r"data")
-    if not os.path.exists(finalDir):
-        os.makedirs(finalDir)
+from filescontroller import CreateFileDirectories
 
+def CheckIfHistoryFilesExist(): # make sure the file exists and all recent files exist before reading/writing
+    CreateFileDirectories()
+    
     if not os.path.isfile(recentFilePath := os.path.join("data", "recent.txt")):
         with open(recentFilePath, "x") as filePath:
             pass

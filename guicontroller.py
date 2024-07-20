@@ -66,6 +66,9 @@ class HomeWindow(QTabWidget):
         self.recentTabPage.setWidget(self.recentTabScrollingFrame)
         
         self.addTab(self.recentTabPage, "Recent")
+        
+    def AddButton(self, button : FileContainer):
+        self.homeWindow.recentTabVerticalLayout.addWidget(button)
 
 
 '''class TabCloseDialog(QDialog):

@@ -10,6 +10,7 @@ from PyQt6.QtWidgets import *
 from guicontroller import *  # FileContainer, TabCloseDialog
 from texteditor import *
 from historycontroller import *
+from filescontroller import *
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -34,6 +35,8 @@ class MainWindow(QMainWindow):
         self.InitTabs()
         self.InitMenubar()
         self.InitToolbar()
+        
+        CreateFileDirectories()
 
     def InitActions(self):
         print("initalising actions", tag="init", tag_color="magenta", color="white")
@@ -158,35 +161,39 @@ class MainWindow(QMainWindow):
     def SaveFile(self, saveAs=False):
         print("attempting to save to file, new file:", saveAs, tag="info", tag_color="blue", color="white")
 
-        tempFilePath = self.currentEditor.filePath
-        selectedExtension = ".txt"
+        selectedSaveFilePath = self.currentEditor.filePath
+        selectedFileExtension = ".txt"
         fileContent = None
-        if not tempFilePath or saveAs:
+        if not selectedSaveFilePath or saveAs:
             supportedFileFilter = "Text File (*.txt);;Word Document (*.docx)"
-            tempFilePath, selectedFilter = QFileDialog.getSaveFileName(self, "Save File", "", supportedFileFilter)
-            selectedExtension = re.search(r'\((.+?)\)', selectedFilter or supportedFileFilter).group(1).replace('*',"") # add extension so file is saved with the selected extension
-            # if not os.path.splitext(tempFilePath)[1]:
-            if os.path.splitext(tempFilePath)[1] != selectedExtension:
-                tempFilePath = (tempFilePath + selectedExtension).strip()
+            selectedSaveFilePath, selectedFilter = QFileDialog.getSaveFileName(self, "Save File", "", supportedFileFilter)
+            selectedFileExtension = re.search(r'\((.+?)\)', selectedFilter or supportedFileFilter).group(1).replace('*',"") # add extension so file is saved with the selected extension
+            # if not os.path.splitext(selectedSaveFilePath)[1]:
+            if selectedSaveFilePath and os.path.splitext(selectedSaveFilePath)[1] != selectedFileExtension:
+                selectedSaveFilePath = (selectedSaveFilePath + selectedFileExtension).strip()
+                
+        if SaveFile(self.currentEditor, selectedSaveFilePath, selectedFileExtension):
+            print("success")
+            self.tabs.setTabText(self.tabs.currentIndex(), self.currentEditor.fileName)
 
-        if tempFilePath and tempFilePath != selectedExtension: # if the string is not selected extension (checks if the user selected something to save as)
+        '''if selectedSaveFilePath and selectedSaveFilePath != selectedFileExtension: # if the string is not selected extension (checks if the user selected something to save as)
             # successfully found file path to save to
-            PrependRecentFileList(tempFilePath)
-            if os.path.exists(tempFilePath):
-                with open(tempFilePath, "r", encoding="utf-8") as tempFile: #save copy in memory before writing
+            PrependRecentFileList(selectedSaveFilePath)
+            if os.path.exists(selectedSaveFilePath):
+                with open(selectedSaveFilePath, "r", encoding="utf-8") as tempFile: #save copy in memory before writing
                     fileContent = tempFile.read()
             try:
-                with open(tempFilePath, "w", encoding="utf-8") as tempFile:
+                with open(selectedSaveFilePath, "w", encoding="utf-8") as tempFile:
                     tempFile.write(self.currentEditor.toPlainText())
-                    self.currentEditor.SetFilePath(tempFilePath)
+                    self.currentEditor.SetFilePath(selectedSaveFilePath)
                     self.tabs.setTabText(self.tabs.currentIndex(), self.currentEditor.fileName)
                     return True
             except:
-                with open(tempFilePath, "w", encoding="utf-8") as tempFile: # replace with old content if possible
+                with open(selectedSaveFilePath, "w", encoding="utf-8") as tempFile: # replace with old content if possible
                     tempFile.write(fileContent)
-                    print("error while trying to save", str(tempFilePath), str(fileContent), tag="error", tag_color="red", color="white")
-        print("save unsuccessful", str(tempFilePath), tag="info", tag_color="blue", color="white")
-        return False
+                    print("error while trying to save", str(selectedSaveFilePath), str(fileContent), tag="error", tag_color="red", color="white")
+        print("save unsuccessful", str(selectedSaveFilePath), tag="info", tag_color="blue", color="white")
+        return False'''
 
     #   signals
     def OnSelectionChange(self): # check all qaction for continuity
@@ -236,26 +243,16 @@ class MainWindow(QMainWindow):
         self.currentEditor.InsertImage()
 
     def OpenHomePage(self):
-        CheckIfHistoryFilesExist() # make sure the file exists before reading/writing
         self.homeWindow = HomeWindow()
 
         for filePath in FetchRecentFileList():
             print(filePath)
-            self.homeWindow.recentTabVerticalLayout.addWidget(tempContainer := FileContainer(filePath))
+            self.homeWindow.AddButton(tempContainer := FileContainer(filePath))
             tempContainer.openFileButton.clicked.connect(partial(self.OpenFile, tempContainer.labelName)) # so the buttons have functionality
 
         self.homeWindow.show()
 
     # text formatting actions
-    '''    def FormatTextBold(self):
-        self.currentEditor.setFontWeight(QFont.Weight.Bold if self.currentEditor.fontWeight() == QFont.Weight.Normal else QFont.Weight.Normal)
-
-    def FormatTextUnderline(self):
-        self.currentEditor.setFontUnderline(not self.currentEditor.fontUnderline())
-
-    def FormatTextItalics(self):
-        self.currentEditor.setFontItalic(not self.currentEditor.fontItalic())'''
-
     def FormatTextBold(self):
         self.currentEditor.ToggleSelectedBold()
 
