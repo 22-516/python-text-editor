@@ -6,35 +6,35 @@ import random
 from historycontroller import *
 
 class FileContainer(QWidget):
-    def __init__(self, filePath=""):
+    def __init__(self, file_path=""):
         super().__init__()
 
-        self.labelName = filePath
+        self.label_name = file_path
 
-        HButtonLayout = QHBoxLayout()
-        fileNameLabel = QLabel(self.labelName)
+        horizontal_button_layout = QHBoxLayout()
+        file_name_label = QLabel(self.label_name)
 
-        VFileButtonLayout = QVBoxLayout()
-        VFileButtonFrame = QFrame()
+        vertical_file_button_layout = QVBoxLayout()
+        vertical_file_button_frame = QFrame()
 
-        self.openFileButton = QPushButton("Open File", self)
-        #self.openFileButton.clicked.connect(self.OpenFileButton)
+        self.open_file_button = QPushButton("Open File", self)
+        #self.open_file_button.clicked.connect(self.OpenFileButton)
 
-        self.removeFileButton = QPushButton("Remove File", self)
-        self.removeFileButton.clicked.connect(self.RemoveFileButton)
+        self.remove_file_button = QPushButton("Remove File", self)
+        self.remove_file_button.clicked.connect(self.remove_file_button_pressed)
 
-        VFileButtonLayout.addWidget(self.openFileButton)
-        VFileButtonLayout.addWidget(self.removeFileButton)
-        VFileButtonFrame.setLayout(VFileButtonLayout)
+        vertical_file_button_layout.addWidget(self.open_file_button)
+        vertical_file_button_layout.addWidget(self.remove_file_button)
+        vertical_file_button_frame.setLayout(vertical_file_button_layout)
 
-        HButtonLayout.addWidget(fileNameLabel)
-        HButtonLayout.addWidget(VFileButtonFrame)
+        horizontal_button_layout.addWidget(file_name_label)
+        horizontal_button_layout.addWidget(vertical_file_button_frame)
 
-        self.setLayout(HButtonLayout)
+        self.setLayout(horizontal_button_layout)
 
-    def RemoveFileButton(self):
-        #print("clicked remove file button", self.labelName)
-        RemoveFromRecentFileList(self.labelName)
+    def remove_file_button_pressed(self):
+        #print("clicked remove file button", self.label_name)
+        remove_path_from_recent_file_list(self.label_name)
         self.setParent(None)
         # self.hide()
 
@@ -58,9 +58,9 @@ class HomeWindow(QTabWidget):
         
         self.recentTabVerticalLayout = QVBoxLayout()
         
-        '''for filePath in FetchRecentFileList():
-            print(filePath)
-            scrollingVLayout.addWidget(FileContainer(filePath))'''
+        '''for file_path in FetchRecentFileList():
+            print(file_path)
+            scrollingVLayout.addWidget(FileContainer(file_path))'''
             
         self.recentTabScrollingFrame.setLayout(self.recentTabVerticalLayout)
         self.recentTabPage.setWidget(self.recentTabScrollingFrame)

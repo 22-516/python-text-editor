@@ -1,61 +1,110 @@
 import os
 import random
+import base64
 
 from PyQt6.QtCore import *  # temp
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 
+IMAGE_EXTENSIONS = [
+    str(file_extension, 'utf-8') for file_extension in QImageReader.supportedImageFormats()]
+
 class TextEditor(QTextEdit):
-    def __init__(self, filePath=""):
+    def __init__(self, file_path=""):
         super().__init__()
+        
+        self.file_path = file_path      
+        _1, file_extension = os.path.splitext(file_path)
+        self.file_name = os.path.basename(file_path) or "New Document"
+        self.file_extension = file_extension or None
 
-        self.SetFilePath(filePath)
-
-        # print(self.filePath, self.fileName, self.fileExtension)
-
-        randomTestingPageId = str(random.randint(1, 100)) #testing new tabs
-        for i in range(9):
+        randomTestingPageId = str(random.randint(1, 100)) # testing new tabs
+        for _ in range(9):
             self.append("testing " + randomTestingPageId)
+            
+    def canInsertFromMimeData(self, source):
+        if source.hasImage():
+            return True
+        else:
+            return super().canInsertFromMimeData(source)
+            #return super(TextEditor, self).canInsertFromMimeData(source)
+
+    def createMimeDataFromSelection(self):
+        cursor = self.textCursor()
+        if len(cursor.selectedText()) == 1:
+            cursor.setPosition(cursor.selectionEnd())
+            fmt = cursor.charFormat()
+            #print(fmt)
+            if fmt.isImageFormat(): 
+                fmt = fmt.toImageFormat() # if selection is an image, convert to QTextImageFormat
+                print(fmt.name())
+                url = QUrl(fmt.name())
+                image = self.document().resource(QTextDocument.ResourceType.ImageResource, url)
+                mime = QMimeData()
+                mime.setImageData(image)
+                return mime
+        return super().createMimeDataFromSelection()
+
+    def insertImage(self, image):
+        if image.isNull():
+            return False
+        if isinstance(image, QPixmap):
+            image = image.toImage()
+
+        doc = self.document()
+        if image.width() > doc.pageSize().width():
+            image = image.scaledToWidth(int(doc.pageSize().width()), Qt.SmoothTransformation)
+
+        byte_array = QByteArray()
+        buffer = QBuffer(byte_array)
+        image.save(buffer, 'PNG', quality=95)
+        binary = base64.b64encode(byte_array.data())
+        html_bin = "<img src= \"data:image/*;base64,{}\" max-width=100% max-height=100%></img>".format(
+            str(binary, 'utf-8'))
+        self.textCursor().insertHtml(html_bin)
+
+        return True
+
+    def insertFromMimeData(self, source : QMimeData):
+        if source.hasImage() and self.insertImage(source.imageData()):
+            return
+        elif source.hasUrls():
+            for url in source.urls():
+                if not url.isLocalFile():
+                    continue
+                path = url.toLocalFile()
+                info = QFileInfo(path)
+                if not info.suffix().lower() in IMAGE_EXTENSIONS:
+                    continue
+                elif self.insertImage(QImage(path)):
+                    return
+        super().insertFromMimeData(source)
 
     def InsertImage(self): #testing
         cursor = QTextCursor(self.textCursor())
-        imageFormat = QTextImageFormat()
-        imageFormat.setName(".\images.png")
-        cursor.insertImage(imageFormat)
+        image_format = QTextImageFormat()
+        image_format.setName("images/icons/edit-bold.png")
+        cursor.insertImage(image_format)
 
-    def SetFilePath(self, filePath=""):
-        self.filePath = filePath      
-        _1, fileExtension = os.path.splitext(filePath)
-        self.fileName = os.path.basename(filePath) or "New Document"
-        self.fileExtension = fileExtension or None
+    def SetFilePath(self, file_path=""):
+        self.file_path = file_path      
+        _1, file_extension = os.path.splitext(file_path)
+        self.file_name = os.path.basename(file_path) or "New Document"
+        self.file_extension = file_extension or None
 
     # text formatting
 
-    def ToggleSelectedBold(self):
-        #print(self.fontWeight())
-        self.setFontWeight(newFontWeight := QFont.Weight.Bold if self.fontWeight() == QFont.Weight.Normal else QFont.Weight.Normal)
-        #print(newFontWeight)
-        return newFontWeight
+    def toggle_selected_bold(self):
+        self.setFontWeight(new_font_weight := QFont.Weight.Bold if self.fontWeight() == QFont.Weight.Normal else QFont.Weight.Normal)
+        return new_font_weight
 
-    def ToggleSelectedUnderline(self):
-        #print(self.fontUnderline())
-        self.setFontUnderline(newFontUnderline := not self.fontUnderline())
-        #print(newFontUnderline)
-        return newFontUnderline
+    def toggle_selected_underline(self):
+        self.setFontUnderline(new_font_underline := not self.fontUnderline())
+        return new_font_underline
 
-    def ToggleSelectedItalics(self):
-        #print(self.fontItalic())
-        self.setFontItalic(newFontItalics := not self.fontItalic())
-        #print(newFontItalics)
-        return newFontItalics
+    def toggle_selected_italics(self):
+        self.setFontItalic(new_font_italics := not self.fontItalic())
+        return new_font_italics
     
-    def OnFontChanged(self, newFont : QFont):
-        self.setCurrentFont(newFont)
-
-'''def onClicked(self):
-        print("clicked button", self.labelName)
-
-    def onClicked2(self):
-        print("clicked button 2", self.labelName)
-        self.setParent(None)
-        # self.hide()'''
+    def on_font_changed(self, new_font : QFont):
+        self.setCurrentFont(new_font)

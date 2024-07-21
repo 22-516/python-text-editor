@@ -3,63 +3,65 @@ import shutil
 
 from texteditor import *
 
-def CreateFileDirectories():
+def create_file_directories():
     currentDir = os.getcwd()
-    if not os.path.exists(dataDir := os.path.join(currentDir, "data")):
-        os.makedirs(dataDir)
+    if not os.path.exists(data_dir := os.path.join(currentDir, "data")):
+        os.makedirs(data_dir)
         
-    if not os.path.exists(dataTempDir := os.path.join(currentDir, "data", "temp")):
-        os.makedirs(dataTempDir)
+    if not os.path.exists(data_temp_dir := os.path.join(currentDir, "data", "temp")):
+        os.makedirs(data_temp_dir)
         
-    if not os.path.isfile(recentFilePath := os.path.join("data", "recent.txt")):
-        with open(recentFilePath, "x") as filePath:
+    if not os.path.isfile(recent_files := os.path.join("data", "recent.txt")):
+        with open(recent_files, "x") as _:
             pass
         
-def GetDataDirectoryPath():
+def get_data_directory_path():
     return os.path.join(os.getcwd(), "data")
 
-def GetDataTempDirectoryPath():
+def get_data_temp_directory_path():
     return os.path.join(os.getcwd(), "data", "temp")
 
-def SaveFile(currentEditor : TextEditor, selectedSaveFilePath, selectedFileExtension):
-    print(currentEditor, selectedSaveFilePath, selectedFileExtension)
+def get_recent_file_path():
+    return os.path.join(os.getcwd(), "data", "recent.txt")
+
+def file_controller_save_file(current_editor : TextEditor, selected_save_file_path, selected_file_extension):
+    print(current_editor, selected_save_file_path, selected_file_extension)
     
-    if not selectedSaveFilePath or not selectedFileExtension:
+    if not selected_save_file_path or not selected_file_extension:
         print("no selected save file path or extension")
         return False
 
-    fileBackup = None
-    saveSuccess = False
-    tempDirectoryPath = GetDataTempDirectoryPath()
+    file_backup = None
+    save_success_state = False
     
-    textEncoding = "utf-8"
+    text_encoding = "utf-8"
 
-    if os.path.exists(selectedSaveFilePath): # save backup of file in case of an error
-        fileBackup = shutil.copy2(selectedSaveFilePath, tempDirectoryPath)
+    if os.path.exists(selected_save_file_path): # save backup of file in case of an error
+        file_backup = shutil.copy2(selected_save_file_path, get_data_temp_directory_path())
         print("created backup of selected file")
         
     try:
-        match selectedFileExtension:
+        match selected_file_extension:
             case ".txt":
                 print("txt")
-                with open(selectedSaveFilePath, "w", encoding=textEncoding) as tempFile:
-                    tempFile.write(currentEditor.toPlainText())
-                    currentEditor.SetFilePath(selectedSaveFilePath)
-                    #self.tabs.setTabText(self.tabs.currentIndex(), self.currentEditor.fileName)
+                with open(selected_save_file_path, "w", encoding=text_encoding) as temp_file:
+                    temp_file.write(current_editor.toPlainText())
+                    current_editor.SetFilePath(selected_save_file_path)
+                    #self.tabs.setTabText(self.tabs.currentIndex(), self.current_editor.fileName)
             case ".docx":
                 print("docx")
     except:
         print("save unsuccessful")
-        if fileBackup: 
-            shutil.move(fileBackup, selectedSaveFilePath) # replace original file with the backup of the original file
+        if file_backup: 
+            shutil.move(file_backup, selected_save_file_path) # replace original file with the backup of the original file
     else:
         print("save successful")
-        saveSuccess = True
+        save_success_state = True
     finally: 
         try: # remove the backup
-            os.remove(fileBackup)
+            os.remove(file_backup)
             print("successfully deleted backup of selected file")
         except FileNotFoundError:
             pass
         
-        return saveSuccess
+        return save_success_state

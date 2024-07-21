@@ -5,74 +5,58 @@ from PyQt6.QtCore import * #temp
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 
-from filescontroller import CreateFileDirectories
+from filescontroller import *
 
 def CheckIfHistoryFilesExist(): # make sure the file exists and all recent files exist before reading/writing
-    CreateFileDirectories()
+    create_file_directories()
 
-    removedFiles = [] # remove all links that are no longer valid
-    with open(recentFilePath, "r") as filePath:
-        fileContent = filePath.readlines()
-        for line in fileContent:
+    removed_file_paths_list = [] # remove all links that are no longer valid
+    with open(get_recent_file_path(), "r") as temp_recent_file_list:
+        file_content = temp_recent_file_list.readlines()
+        for line in file_content:
             #print(line.strip(), os.path.exists(line.strip()), color="green")
             if not os.path.isfile(line):
-                removedFiles.append(line)
-    print("removing files from recent file list", removedFiles, color="purple")
-    for removedFilePath in removedFiles:
-        RemoveFromRecentFileList(removedFilePath)
+                removed_file_paths_list.append(line)
+    print("removing files from recent file list", removed_file_paths_list, color="purple")
+    for removed_file_path in removed_file_paths_list:
+        remove_path_from_recent_file_list(removed_file_path)
 
-def FetchRecentFileList():
-    fileList = []
-    with open(os.path.join("data", "recent.txt"), "r") as recentFileList:
-        while line := recentFileList.readline():
-            #print(line.rstrip())
-            fileList.append(line.rstrip())
-            #print(line.strip(), color="magenta")
-    #print(fileList, color="yellow")
-    return fileList
+def fetch_recent_file_list():
+    file_list = []
+    with open(get_recent_file_path(), "r") as recent_file_list:
+        while line := recent_file_list.readline():
+            file_list.append(line.rstrip())
 
-def PrependRecentFileList(newFilePath=""):
-    RemoveFromRecentFileList(newFilePath)  # remove previous entry
+    return file_list
 
-    recentFileList = FetchRecentFileList()
-    recentFileList.insert(0, newFilePath)
+def prepend_recent_file_list(new_file_path=""):
+    remove_path_from_recent_file_list(new_file_path)  # remove previous entry
 
-    with open(os.path.join("data", "recent.txt"), "wt") as fileList:
-        #for line in recentFileList:
-        fileList.write("\n".join(str(line) for line in recentFileList))
-        
-    #print(FetchRecentFileList(), color="green")
+    recent_file_list = fetch_recent_file_list()
+    recent_file_list.insert(0, new_file_path)
 
-    '''
-    with open(os.path.join("data", "recent.txt"), "r+") as recentFileList:
-        tempFile = recentFileList.read() # save file to memory so that we can prepend to the beginning of the file                
-        recentFileList.seek(0,0)
-        print(newFilePath, color="blue")
-        print(tempFile, color="green")
-        recentFileList.truncate(0)
-        print(newFilePath.strip() + "\n" + tempFile, color="red")
-        recentFileList.write(newFilePath + "\n" + tempFile)
-        # recentFileList.write(newdata := filePath.strip() + "\n" + tempFile)
-        # print(newdata, color="green")'''
+    with open(get_recent_file_path(), "wt") as file_list:
+        file_list.write("\n".join(str(line) for line in recent_file_list))
 
-def RemoveFromRecentFileList(removedFilePath=""):
-    print("removing from recent file list", removedFilePath, tag="history", tag_color="yellow", color="white")
 
-    fileList = FetchRecentFileList()
-    if removedFilePath in fileList: # remove the path from file array
-        fileList.remove(removedFilePath)
+def remove_path_from_recent_file_list(removed_file_path=""):
+    print("removing from recent file list", removed_file_path, tag="history", tag_color="yellow", color="white")
 
-    with open(os.path.join("data", "recent.txt"), "w") as newFileList: # write array to recent file list
-        newFileList.write("\n".join(str(line) for line in fileList))
+    file_list = fetch_recent_file_list()
+    if removed_file_path in file_list: # remove the path from file array
+        file_list.remove(removed_file_path)
 
-    '''print(FetchRecentFileList(), color="red")
+    with open(get_recent_file_path(), "w") as new_file_list: # write array to recent file list
+        new_file_list.write("\n".join(str(line) for line in file_list))
 
-    with open(os.path.join("data", "recent.txt"), "r+") as recentFileList:
-        fileContent = recentFileList.readlines()
-        recentFileList.seek(0)
-        recentFileList.truncate()
-        for line in fileContent:
-            if line.strip() != removedFilePath:
-                recentFileList.write(line.strip())
+    # print(fetch_recent_file_list(), color="red")
 
-    print(FetchRecentFileList(), color="red")'''
+    # with open(os.path.join("data", "recent.txt"), "r+") as recent_file_list:
+    #     file_content = recent_file_list.readlines()
+    #     recent_file_list.seek(0)
+    #     recent_file_list.truncate()
+    #     for line in file_content:
+    #         if line.strip() != removed_file_path:
+    #             recent_file_list.write(line.strip())
+
+    # print(fetch_recent_file_list(), color="red")
