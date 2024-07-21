@@ -217,20 +217,29 @@ class MainWindow(QMainWindow):
             case QMessageBox.StandardButton.Save:
                 print("save", tag="info", tag_color="blue", color="white")
                 if not self.save_file():
-                    return
+                    return False
             case QMessageBox.StandardButton.Discard:
                 print("discard", tag="info", tag_color="blue", color="white")
             case QMessageBox.StandardButton.Cancel:
                 print("cancel", tag="info", tag_color="blue", color="white")
-                return
+                return False
             case _:
                 print("data not saved", tag="info", tag_color="blue", color="white")
-                return
+                return False
 
         self.tabs.removeTab(tab_index) # close tab
 
         if self.tabs.count() <= 0: # ensure always one editor page available
             self.add_editor_page()
+            
+        return True
+
+    def closeEvent(self, event): # override class window close event to ensure tabs are saved or discarded on exit
+        for tab_index in range(0, self.tabs.count()):
+            if not self.on_tab_close(tab_index): # if a tab is not saved or discarded, and the cancel button is pressed instead
+                event.ignore()
+                return
+        event.accept()
 
     #   actions
     def new_page_button_pressed(self):
@@ -253,16 +262,16 @@ class MainWindow(QMainWindow):
 
     # text formatting actions
     def format_text_bold(self):
-        self.current_editor.ToggleSelectedBold()
+        self.current_editor.toggle_selected_bold()
 
     def format_text_underline(self):
-        self.current_editor.ToggleSelectedUnderline()
+        self.current_editor.toggle_selected_underline()
 
     def format_text_italics(self):
-        self.current_editor.ToggleSelectedItalics()
+        self.current_editor.toggle_selected_italics()
         
-    def format_text_font(self, newFont):
-        self.current_editor.OnFontChanged(newFont)
+    def format_text_font(self, new_font):
+        self.current_editor.on_font_changed(new_font)
 
 app = QApplication(sys.argv)
 
