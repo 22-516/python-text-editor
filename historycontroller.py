@@ -9,10 +9,6 @@ from filescontroller import CreateFileDirectories
 
 def CheckIfHistoryFilesExist(): # make sure the file exists and all recent files exist before reading/writing
     CreateFileDirectories()
-    
-    if not os.path.isfile(recentFilePath := os.path.join("data", "recent.txt")):
-        with open(recentFilePath, "x") as filePath:
-            pass
 
     removedFiles = [] # remove all links that are no longer valid
     with open(recentFilePath, "r") as filePath:

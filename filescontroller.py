@@ -1,6 +1,5 @@
 import os
 import shutil
-import tempfile
 
 from texteditor import *
 
@@ -11,6 +10,10 @@ def CreateFileDirectories():
         
     if not os.path.exists(dataTempDir := os.path.join(currentDir, "data", "temp")):
         os.makedirs(dataTempDir)
+        
+    if not os.path.isfile(recentFilePath := os.path.join("data", "recent.txt")):
+        with open(recentFilePath, "x") as filePath:
+            pass
         
 def GetDataDirectoryPath():
     return os.path.join(os.getcwd(), "data")
