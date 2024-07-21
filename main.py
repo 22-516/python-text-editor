@@ -19,7 +19,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Editor")
         # self.setGeometry(0, 0, 800, 600)
 
-        self.InitaliseEditorWindow()
+        self.initalise_editor_window()
         self.add_editor_page()
 
         '''self.status_bar = QStatusBar()
@@ -28,9 +28,9 @@ class MainWindow(QMainWindow):
 
     #   functions
     #       initalisation
-    def InitaliseEditorWindow(self):
+    def initalise_editor_window(self):
         print("initalising editor window", tag="init", tag_color="magenta", color="white")
-        self.InitActions()
+        self.init_actions()
         self.init_objects()
         self.init_tabs()
         self.init_menubar()
@@ -38,7 +38,7 @@ class MainWindow(QMainWindow):
         
         create_file_directories()
 
-    def InitActions(self):
+    def init_actions(self):
         print("initalising actions", tag="init", tag_color="magenta", color="white")
         self.new_page_action = QAction("&New Page", self) 
         # self.button_action.setToolTip("tooltip")
