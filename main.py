@@ -76,6 +76,7 @@ class MainWindow(QMainWindow):
         
     def init_objects(self):
         self.font_combo_box_widget = QFontComboBox(self)
+        self.font_combo_box_widget.setEditable(False)
         self.font_combo_box_widget.currentFontChanged.connect(self.format_text_font)
         self.font_combo_box_widget.setWritingSystem(QFontDatabase.WritingSystem.Latin) # for inital testing with english fonts
         #self.font_combo_box_widget
@@ -93,7 +94,7 @@ class MainWindow(QMainWindow):
 
         new_tab_button.clicked.connect(self.new_page_button_pressed)
         self.tabs.currentChanged.connect(self.on_tab_change)
-        self.tabs.tabCloseRequested.connect(self.on_tab_close)
+        self.tabs.tabCloseRequested.connect(self.request_tab_close)
 
     def init_menubar(self):
         print("initalising menu bar", tag="init", tag_color="magenta", color="white")
@@ -208,7 +209,7 @@ class MainWindow(QMainWindow):
         self.on_editor_selection_change() # update text formatting qactions checked status upon changing tabs to preserve continuity between tabs
         print("tab changed to", self.current_editor, tag="editor", tag_color="green", color="white")
 
-    def on_tab_close(self, tab_index):
+    def request_tab_close(self, tab_index):
         self.tabs.setCurrentIndex(tab_index)
         print("prompting close ", self.current_editor, tag="editor", tag_color="green", color="yellow")
 
@@ -236,7 +237,7 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event): # override class window close event to ensure tabs are saved or discarded on exit
         for tab_index in range(0, self.tabs.count()):
-            if not self.on_tab_close(tab_index): # if a tab is not saved or discarded, and the cancel button is pressed instead
+            if not self.request_tab_close(tab_index): # if a tab is not saved or discarded, and the cancel button is pressed instead
                 event.ignore()
                 return
         event.accept()
@@ -271,6 +272,7 @@ class MainWindow(QMainWindow):
         self.current_editor.toggle_selected_italics()
         
     def format_text_font(self, new_font):
+        self.current_editor.setFocus()
         self.current_editor.on_font_changed(new_font)
 
 app = QApplication(sys.argv)
