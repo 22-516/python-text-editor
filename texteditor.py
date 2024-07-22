@@ -106,5 +106,5 @@ class TextEditor(QTextEdit):
         self.setFontItalic(new_font_italics := not self.fontItalic())
         return new_font_italics
     
-    def on_font_changed(self, new_font : QFont):
+    def change_font(self, new_font : QFont):
         self.setCurrentFont(new_font)

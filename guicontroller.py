@@ -68,7 +68,7 @@ class HomeWindow(QTabWidget):
         self.addTab(self.recentTabPage, "Recent")
         
     def AddButton(self, button : FileContainer):
-        self.homeWindow.recentTabVerticalLayout.addWidget(button)
+        self.recentTabVerticalLayout.addWidget(button)
 
 
 '''class TabCloseDialog(QDialog):

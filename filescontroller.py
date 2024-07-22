@@ -36,8 +36,8 @@ def file_controller_save_file(current_editor : TextEditor, selected_save_file_pa
     
     text_encoding = "utf-8"
 
-    if os.path.exists(selected_save_file_path): # save backup of file in case of an error
-        file_backup = shutil.copy2(selected_save_file_path, get_data_temp_directory_path())
+    if os.path.exists(selected_save_file_path): # sometimes the file may not exist yet (save as)
+        file_backup = shutil.copy2(selected_save_file_path, get_data_temp_directory_path()) # save backup of file in case of an error
         print("created backup of selected file")
         
     try:
@@ -47,7 +47,6 @@ def file_controller_save_file(current_editor : TextEditor, selected_save_file_pa
                 with open(selected_save_file_path, "w", encoding=text_encoding) as temp_file:
                     temp_file.write(current_editor.toPlainText())
                     current_editor.SetFilePath(selected_save_file_path)
-                    #self.tabs.setTabText(self.tabs.currentIndex(), self.current_editor.fileName)
             case ".docx":
                 print("docx")
     except:

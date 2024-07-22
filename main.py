@@ -252,14 +252,14 @@ class MainWindow(QMainWindow):
         self.current_editor.InsertImage()
 
     def open_home_page(self):
-        home_window = HomeWindow()
+        self.home_window = HomeWindow()
 
         for file_path in fetch_recent_file_list():
             print(file_path)
-            home_window.AddButton(temp_container := FileContainer(file_path))
-            temp_container.openFileButton.clicked.connect(partial(self.open_file, temp_container.labelName)) # so the buttons have functionality
+            self.home_window.AddButton(temp_container := FileContainer(file_path))
+            temp_container.open_file_button.clicked.connect(partial(self.open_file, temp_container.label_name)) # so the buttons have functionality
 
-        home_window.show()
+        self.home_window.show()
 
     # text formatting actions
     def format_text_bold(self):
@@ -273,7 +273,7 @@ class MainWindow(QMainWindow):
         
     def format_text_font(self, new_font):
         self.current_editor.setFocus()
-        self.current_editor.on_font_changed(new_font)
+        self.current_editor.change_font(new_font)
 
 app = QApplication(sys.argv)
 
