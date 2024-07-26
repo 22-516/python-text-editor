@@ -22,6 +22,8 @@ class TextEditor(QTextEdit):
         for _ in range(9):
             self.append("testing " + randomTestingPageId)
             
+        self.document().setModified(False) # temporary to allow for placeholder text on launch
+            
     def canInsertFromMimeData(self, source):
         if source.hasImage():
             return True
@@ -31,7 +33,7 @@ class TextEditor(QTextEdit):
 
     def createMimeDataFromSelection(self):
         cursor = self.textCursor()
-        if len(cursor.selectedText()) == 1:
+        if len(cursor.selectedText()) == 1: # if only one character is selected, check if it's an image
             cursor.setPosition(cursor.selectionEnd())
             fmt = cursor.charFormat()
             #print(fmt)
@@ -48,7 +50,7 @@ class TextEditor(QTextEdit):
     def insertImage(self, image):
         if image.isNull():
             return False
-        if isinstance(image, QPixmap):
+        if isinstance(image, QPixmap): # if image is a QPixmap, convert to QImage
             image = image.toImage()
 
         doc = self.document()
@@ -86,7 +88,7 @@ class TextEditor(QTextEdit):
         image_format.setName("images/icons/edit-bold.png")
         cursor.insertImage(image_format)
 
-    def SetFilePath(self, file_path=""):
+    def set_file_path(self, file_path=""):
         self.file_path = file_path      
         _1, file_extension = os.path.splitext(file_path)
         self.file_name = os.path.basename(file_path) or "New Document"

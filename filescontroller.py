@@ -46,7 +46,7 @@ def file_controller_save_file(current_editor : TextEditor, selected_save_file_pa
                 print("txt")
                 with open(selected_save_file_path, "w", encoding=text_encoding) as temp_file:
                     temp_file.write(current_editor.toPlainText())
-                    current_editor.SetFilePath(selected_save_file_path)
+                    current_editor.set_file_path(selected_save_file_path)
             case ".docx":
                 print("docx")
     except:

@@ -132,6 +132,7 @@ class MainWindow(QMainWindow):
         self.tabs.setCurrentWidget(self.current_editor)
 
         self.current_editor.currentCharFormatChanged.connect(self.on_editor_selection_change)
+        self.current_editor.document().contentsChanged.connect(self.update_tab_name)
 
     def open_file(self, selected_file=""):
         print("attempting to open from file", tag="info", tag_color="blue", color="white")
@@ -174,7 +175,9 @@ class MainWindow(QMainWindow):
                 selected_save_file_path = (selected_save_file_path + selected_file_extension).strip()
                 
         if file_controller_save_file(self.current_editor, selected_save_file_path, selected_file_extension):
-            self.tabs.setTabText(self.tabs.currentIndex(), self.current_editor.file_name)
+            self.current_editor.document().setModified(False)
+            self.update_tab_name()
+            #self.tabs.setTabText(self.tabs.currentIndex(), self.current_editor.file_name)
 
         # if selected_save_file_path and selected_save_file_path != selected_file_extension: # if the string is not selected extension (checks if the user selected something to save as)
         #     # successfully found file path to save to
@@ -195,14 +198,22 @@ class MainWindow(QMainWindow):
         # print("save unsuccessful", str(selected_save_file_path), tag="info", tag_color="blue", color="white")
         # return False
 
+    def update_tab_name(self):
+        if self.current_editor.document().isModified():
+            self.tabs.setTabText(self.tabs.currentIndex(), self.current_editor.file_name + "*")
+        else:
+            self.tabs.setTabText(self.tabs.currentIndex(), self.current_editor.file_name)
+
     #   signals
-    def on_editor_selection_change(self): # check all qaction for continuity
+    def on_editor_selection_change(self): # when the cursor selection is changed (eg if the user clicks on bolded text)
+        # check all qactions for continuity
         if self.current_editor: # if the editor exists (prevents issues when tab is closed)
             self.text_bold_action.setChecked(True if not self.current_editor.fontWeight() == QFont.Weight.Normal else False)
             self.text_underline_action.setChecked(True if self.current_editor.fontUnderline() else False)
             self.text_italic_action.setChecked(True if self.current_editor.fontItalic() else False)
             with QSignalBlocker(self.font_combo_box_widget): # block font combobox signal to prevent loop where upon selection change, font combobox changes font which changes font of selected text
                 self.font_combo_box_widget.setCurrentFont(self.current_editor.currentFont())
+                
 
     def on_tab_change(self):
         self.current_editor = self.tabs.currentWidget()
@@ -213,20 +224,21 @@ class MainWindow(QMainWindow):
         self.tabs.setCurrentIndex(tab_index)
         print("prompting close ", self.current_editor, tag="editor", tag_color="green", color="yellow")
 
-        close_tab_dialog_answer = TabCloseDialog().exec()
-        match close_tab_dialog_answer:
-            case QMessageBox.StandardButton.Save:
-                print("save", tag="info", tag_color="blue", color="white")
-                if not self.save_file():
+        if self.current_editor.document().isModified(): # only prompt user if the document is modiifed
+            close_tab_dialog_answer = TabCloseDialog().exec()
+            match close_tab_dialog_answer:
+                case QMessageBox.StandardButton.Save:
+                    print("save", tag="info", tag_color="blue", color="white")
+                    if not self.save_file():
+                        return False
+                case QMessageBox.StandardButton.Discard:
+                    print("discard", tag="info", tag_color="blue", color="white")
+                case QMessageBox.StandardButton.Cancel:
+                    print("cancel", tag="info", tag_color="blue", color="white")
                     return False
-            case QMessageBox.StandardButton.Discard:
-                print("discard", tag="info", tag_color="blue", color="white")
-            case QMessageBox.StandardButton.Cancel:
-                print("cancel", tag="info", tag_color="blue", color="white")
-                return False
-            case _:
-                print("data not saved", tag="info", tag_color="blue", color="white")
-                return False
+                case _:
+                    print("data not saved", tag="info", tag_color="blue", color="white")
+                    return False
 
         self.tabs.removeTab(tab_index) # close tab
 
