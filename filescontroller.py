@@ -31,7 +31,7 @@ def file_controller_save_file(current_editor : TextEditor, selected_save_file_pa
         print("no selected save file path or extension")
         return False
 
-    file_backup = None
+    file_backup = ""
     save_success_state = False
     
     text_encoding = "utf-8"

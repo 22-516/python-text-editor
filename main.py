@@ -35,7 +35,7 @@ class MainWindow(QMainWindow):
         self.init_tabs()
         self.init_menubar()
         self.init_toolbar()
-        
+
         create_file_directories()
 
     def init_actions(self):
@@ -73,13 +73,13 @@ class MainWindow(QMainWindow):
         self.text_italic_action.triggered.connect(self.format_text_italics)
         self.text_italic_action.setCheckable(True)
         self.text_italic_action.setIcon(QIcon(os.path.join("images", "icons", "edit-italic.png")))
-        
+
     def init_objects(self):
         self.font_combo_box_widget = QFontComboBox(self)
         self.font_combo_box_widget.setEditable(False)
         self.font_combo_box_widget.currentFontChanged.connect(self.format_text_font)
         self.font_combo_box_widget.setWritingSystem(QFontDatabase.WritingSystem.Latin) # for inital testing with english fonts
-        #self.font_combo_box_widget
+        # self.font_combo_box_widget
 
     def init_tabs(self):
         print("initalising tabs", tag="init", tag_color="magenta", color="white")
@@ -120,7 +120,7 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(self.text_bold_action)
         self.toolbar.addAction(self.text_underline_action)
         self.toolbar.addAction(self.text_italic_action)
-        
+
         self.toolbar.addWidget(self.font_combo_box_widget)
 
     #       editor functionality
@@ -132,7 +132,7 @@ class MainWindow(QMainWindow):
         self.tabs.setCurrentWidget(self.current_editor)
 
         self.current_editor.currentCharFormatChanged.connect(self.on_editor_selection_change)
-        self.current_editor.document().contentsChanged.connect(self.update_tab_name)
+        self.current_editor.document().modificationChanged.connect(self.update_tab_name)
 
     def open_file(self, selected_file=""):
         print("attempting to open from file", tag="info", tag_color="blue", color="white")
@@ -161,11 +161,11 @@ class MainWindow(QMainWindow):
             print("opened file does not exist or no content", tag="info", tag_color="blue", color="white")
 
     def save_file(self, save_as=False):
-        print("attempting to save to file, new file:", save_as, tag="info", tag_color="blue", color="white")
+        print("attempting to save to file, new file? :", save_as, tag="info", tag_color="blue", color="white")
 
         selected_save_file_path = self.current_editor.file_path
         selected_file_extension = ".txt"
-        
+
         if not selected_save_file_path or save_as:
             supported_file_filter = "Text File (*.txt);;Word Document (*.docx)"
             selected_save_file_path, selected_filter = QFileDialog.getSaveFileName(self, "Save File", "", supported_file_filter)
@@ -173,36 +173,25 @@ class MainWindow(QMainWindow):
             # if not os.path.splitext(selected_save_file_path)[1]:
             if selected_save_file_path and os.path.splitext(selected_save_file_path)[1] != selected_file_extension:
                 selected_save_file_path = (selected_save_file_path + selected_file_extension).strip()
-                
+
         if file_controller_save_file(self.current_editor, selected_save_file_path, selected_file_extension):
             self.current_editor.document().setModified(False)
-            self.update_tab_name()
-            #self.tabs.setTabText(self.tabs.currentIndex(), self.current_editor.file_name)
-
-        # if selected_save_file_path and selected_save_file_path != selected_file_extension: # if the string is not selected extension (checks if the user selected something to save as)
-        #     # successfully found file path to save to
-        #     PrependRecentFileList(selected_save_file_path)
-        #     if os.path.exists(selected_save_file_path):
-        #         with open(selected_save_file_path, "r", encoding="utf-8") as temp_file: #save copy in memory before writing
-        #             file_content = temp_file.read()
-        #     try:
-        #         with open(selected_save_file_path, "w", encoding="utf-8") as temp_file:
-        #             temp_file.write(self.current_editor.toPlainText())
-        #             self.current_editor.SetFilePath(selected_save_file_path)
-        #             self.tabs.setTabText(self.tabs.currentIndex(), self.current_editor.file_name)
-        #             return True
-        #     except:
-        #         with open(selected_save_file_path, "w", encoding="utf-8") as temp_file: # replace with old content if possible
-        #             temp_file.write(file_content)
-        #             print("error while trying to save", str(selected_save_file_path), str(file_content), tag="error", tag_color="red", color="white")
-        # print("save unsuccessful", str(selected_save_file_path), tag="info", tag_color="blue", color="white")
-        # return False
-
-    def update_tab_name(self):
-        if self.current_editor.document().isModified():
-            self.tabs.setTabText(self.tabs.currentIndex(), self.current_editor.file_name + "*")
+            #self.update_tab_name() # prompt name change so it instantly updates the tab name
+            print("file saved to", selected_save_file_path, tag="editor", tag_color="green", color="white")
+            return True
         else:
-            self.tabs.setTabText(self.tabs.currentIndex(), self.current_editor.file_name)
+            print("file not saved", tag="editor", tag_color="green", color="white")
+            return False
+
+    def update_tab_name(self, new_modification_status):
+        if not new_modification_status:
+            new_modification_status = self.current_editor.document().isModified()
+        self.tabs.setTabText(self.tabs.currentIndex(), (self.current_editor.file_name + "*") if new_modification_status else self.current_editor.file_name)
+    # def update_tab_name(self):
+    #     if self.current_editor.document().isModified():
+    #         self.tabs.setTabText(self.tabs.currentIndex(), self.current_editor.file_name + "*")
+    #     else:
+    #         self.tabs.setTabText(self.tabs.currentIndex(), self.current_editor.file_name)
 
     #   signals
     def on_editor_selection_change(self): # when the cursor selection is changed (eg if the user clicks on bolded text)
@@ -213,7 +202,6 @@ class MainWindow(QMainWindow):
             self.text_italic_action.setChecked(True if self.current_editor.fontItalic() else False)
             with QSignalBlocker(self.font_combo_box_widget): # block font combobox signal to prevent loop where upon selection change, font combobox changes font which changes font of selected text
                 self.font_combo_box_widget.setCurrentFont(self.current_editor.currentFont())
-                
 
     def on_tab_change(self):
         self.current_editor = self.tabs.currentWidget()
@@ -244,7 +232,7 @@ class MainWindow(QMainWindow):
 
         if self.tabs.count() <= 0: # ensure always one editor page available
             self.add_editor_page()
-            
+
         return True
 
     def closeEvent(self, event): # override class window close event to ensure tabs are saved or discarded on exit
@@ -282,10 +270,11 @@ class MainWindow(QMainWindow):
 
     def format_text_italics(self):
         self.current_editor.toggle_selected_italics()
-        
+
     def format_text_font(self, new_font):
         self.current_editor.setFocus()
         self.current_editor.change_font(new_font)
+
 
 app = QApplication(sys.argv)
 
