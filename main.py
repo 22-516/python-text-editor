@@ -136,41 +136,55 @@ class MainWindow(QMainWindow):
 
     def open_file(self, selected_file=""):
         print("attempting to open from file", tag="info", tag_color="blue", color="white")
+        selected_file_extension = ".txt"
+        
         if not selected_file:
-            selected_file, selected_filter = QFileDialog.getOpenFileName(self, "Open File")
+            supported_file_filter = "Supported Text Document Formats (*.txt *.docx)"
+            selected_file, selected_filter = QFileDialog.getOpenFileName(self, "Open File", "", supported_file_filter)
 
+        selected_file_extension = os.path.splitext(selected_file)[1]
+            
         for tab in range(self.tabs.count()):
             if selected_file == self.tabs.widget(tab).file_path:
                 prepend_recent_file_list(selected_file)
                 print("file with path", selected_file, "already open in editor, switching tabs" or "None", tag="editor", tag_color="green", color="white")
                 self.tabs.setCurrentIndex(tab)
                 return
-
-        file_content = None
-        if selected_file:
-            try:
-                with open(selected_file, "r", encoding="utf-8") as temp_file:
-                    file_content = temp_file.read()
-            except FileNotFoundError:
-                pass
-        if file_content or (not file_content and selected_file): #if file selected but empty contents (no text)
-            self.add_editor_page(selected_file) #(os.path.basename(selected_file))
+            
+        file_content = file_controller_open_file(selected_file, selected_file_extension)
+        if file_content:
+            self.add_editor_page(selected_file)
             self.current_editor.setText(file_content)
+            self.current_editor.document().setModified(False)
+            self.current_editor.set_file_path(selected_file)
             prepend_recent_file_list(selected_file)
         else:
             print("opened file does not exist or no content", tag="info", tag_color="blue", color="white")
+
+        # file_content = None
+        # if selected_file:
+        #     try:
+        #         with open(selected_file, "r", encoding="utf-8") as temp_file:
+        #             file_content = temp_file.read()
+        #     except FileNotFoundError:
+        #         pass
+        # if file_content or (not file_content and selected_file): #if file selected but empty contents (no text)
+        #     self.add_editor_page(selected_file) #(os.path.basename(selected_file))
+        #     self.current_editor.setText(file_content)
+        #     prepend_recent_file_list(selected_file)
+        # else:
+        #     print("opened file does not exist or no content", tag="info", tag_color="blue", color="white")
 
     def save_file(self, save_as=False):
         print("attempting to save to file, new file? :", save_as, tag="info", tag_color="blue", color="white")
 
         selected_save_file_path = self.current_editor.file_path
-        selected_file_extension = ".txt"
+        selected_file_extension = self.current_editor.file_extension
 
         if not selected_save_file_path or save_as:
             supported_file_filter = "Text File (*.txt);;Word Document (*.docx)"
             selected_save_file_path, selected_filter = QFileDialog.getSaveFileName(self, "Save File", "", supported_file_filter)
             selected_file_extension = re.search(r'\((.+?)\)', selected_filter or supported_file_filter).group(1).replace('*',"") # add extension so file is saved with the selected extension
-            # if not os.path.splitext(selected_save_file_path)[1]:
             if selected_save_file_path and os.path.splitext(selected_save_file_path)[1] != selected_file_extension:
                 selected_save_file_path = (selected_save_file_path + selected_file_extension).strip()
 
@@ -187,12 +201,7 @@ class MainWindow(QMainWindow):
         if not new_modification_status:
             new_modification_status = self.current_editor.document().isModified()
         self.tabs.setTabText(self.tabs.currentIndex(), (self.current_editor.file_name + "*") if new_modification_status else self.current_editor.file_name)
-    # def update_tab_name(self):
-    #     if self.current_editor.document().isModified():
-    #         self.tabs.setTabText(self.tabs.currentIndex(), self.current_editor.file_name + "*")
-    #     else:
-    #         self.tabs.setTabText(self.tabs.currentIndex(), self.current_editor.file_name)
-
+        
     #   signals
     def on_editor_selection_change(self): # when the cursor selection is changed (eg if the user clicks on bolded text)
         # check all qactions for continuity
