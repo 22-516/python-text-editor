@@ -137,26 +137,26 @@ class MainWindow(QMainWindow):
     def open_file(self, selected_file=""):
         print("attempting to open from file", tag="info", tag_color="blue", color="white")
         selected_file_extension = ".txt"
-        
+
         if not selected_file:
-            supported_file_filter = "Supported Text Document Formats (*.txt *.docx)"
+            supported_file_filter = "Text File (*.txt);;Word Document (*.docx)"
             selected_file, selected_filter = QFileDialog.getOpenFileName(self, "Open File", "", supported_file_filter)
 
         selected_file_extension = os.path.splitext(selected_file)[1]
-            
+
         for tab in range(self.tabs.count()):
             if selected_file == self.tabs.widget(tab).file_path:
                 prepend_recent_file_list(selected_file)
                 print("file with path", selected_file, "already open in editor, switching tabs" or "None", tag="editor", tag_color="green", color="white")
                 self.tabs.setCurrentIndex(tab)
                 return
-            
+
         file_content = file_controller_open_file(selected_file, selected_file_extension)
         if file_content:
             self.add_editor_page(selected_file)
             self.current_editor.setText(file_content)
             self.current_editor.document().setModified(False)
-            self.current_editor.set_file_path(selected_file)
+            #self.current_editor.set_file_path(selected_file)
             prepend_recent_file_list(selected_file)
         else:
             print("opened file does not exist or no content", tag="info", tag_color="blue", color="white")
@@ -190,7 +190,9 @@ class MainWindow(QMainWindow):
 
         if file_controller_save_file(self.current_editor, selected_save_file_path, selected_file_extension):
             self.current_editor.document().setModified(False)
-            #self.update_tab_name() # prompt name change so it instantly updates the tab name
+            self.current_editor.set_file_path(selected_save_file_path)
+            prepend_recent_file_list(selected_save_file_path)
+            # self.update_tab_name() # prompt name change so it instantly updates the tab name
             print("file saved to", selected_save_file_path, tag="editor", tag_color="green", color="white")
             return True
         else:
@@ -201,7 +203,7 @@ class MainWindow(QMainWindow):
         if not new_modification_status:
             new_modification_status = self.current_editor.document().isModified()
         self.tabs.setTabText(self.tabs.currentIndex(), (self.current_editor.file_name + "*") if new_modification_status else self.current_editor.file_name)
-        
+
     #   signals
     def on_editor_selection_change(self): # when the cursor selection is changed (eg if the user clicks on bolded text)
         # check all qactions for continuity

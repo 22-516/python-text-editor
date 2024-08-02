@@ -42,8 +42,9 @@ def file_controller_open_file(selected_file_path, selected_file_extension):
                     file_content = temp_file.read()
             case ".docx":
                 print("docx")
-    except:
-        print("file open unsuccessful")
+                file_content = parse_docx_file_to_html(selected_file_path)
+    except Exception as exception:
+        print("file open unsuccessful", exception)
     else:
         print("file open successful")
     finally: 

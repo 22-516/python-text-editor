@@ -1,10 +1,7 @@
 from docx import Document
 from docx.shared import Inches, Pt
-# import os
+import mammoth
 import io
-# import base64
-# import sys
-# from PIL import Image
 
 from PyQt6.QtCore import *  # temp
 from PyQt6.QtGui import *
@@ -21,6 +18,15 @@ def apply_formatting(character_format : QTextCharFormat, temp_run):
         temp_run.font.name = temp_font_family
     if temp_font_size :=character_format.font().pointSize():
         temp_run.font.size = Pt(temp_font_size)
+
+def parse_docx_file_to_html(docx_file_path: str):
+    with open(docx_file_path, "rb") as docx_file:
+        result = mammoth.convert_to_html(docx_file)
+        html = result.value
+        messages = result.messages
+        print(messages)
+        print(html)
+        return html
 
 def parse_editor_document_to_docx(editor_document: QTextDocument):
     doc = Document()
