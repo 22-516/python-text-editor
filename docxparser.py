@@ -24,8 +24,8 @@ def parse_docx_file_to_html(docx_file_path: str):
         result = mammoth.convert_to_html(docx_file)
         html = result.value
         messages = result.messages
-        print(messages)
-        print(html)
+        # print(messages)
+        # print(html)
         return html
 
 def parse_editor_document_to_docx(editor_document: QTextDocument):
