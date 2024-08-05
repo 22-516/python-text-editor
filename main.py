@@ -208,7 +208,7 @@ class MainWindow(QMainWindow):
 
         if not selected_save_file_path or save_as:
             supported_file_filter = "Text File (*.txt);;Word Document (*.docx)"
-            selected_save_file_path, selected_filter = QFileDialog.getSaveFileName(
+            selected_save_file_path, _ = QFileDialog.getSaveFileName(
                 self, "Save File", "", supported_file_filter
             )
             # grab extension from file path 
@@ -227,8 +227,8 @@ class MainWindow(QMainWindow):
         if file_controller_save_file(
             self.current_editor, selected_save_file_path, selected_file_extension
         ):
-            self.current_editor.document().setModified(False)
             self.current_editor.set_file_path(selected_save_file_path)
+            self.current_editor.document().setModified(False)
             prepend_recent_file_list(selected_save_file_path)
             # self.update_tab_name() # prompt name change so it instantly updates the tab name
             print(
