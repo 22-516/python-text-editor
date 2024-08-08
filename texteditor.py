@@ -95,9 +95,14 @@ class TextEditor(QTextEdit):
         self.file_extension = file_extension or None
 
     # text formatting
+    
+    def font_bold(self):
+        font_weight = self.fontWeight()
+        return font_weight == QFont.Weight.Bold
 
     def toggle_selected_bold(self):
-        self.setFontWeight(new_font_weight := QFont.Weight.Bold if self.fontWeight() == QFont.Weight.Normal else QFont.Weight.Normal)
+        #self.setFontWeight(new_font_weight := QFont.Weight.Bold if self.fontWeight() == QFont.Weight.Normal else QFont.Weight.Normal)
+        self.setFontWeight(new_font_weight := QFont.Weight.Bold if self.font_bold() else QFont.Weight.Normal)
         return new_font_weight
 
     def toggle_selected_underline(self):

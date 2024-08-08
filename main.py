@@ -149,7 +149,7 @@ class MainWindow(QMainWindow):
         self.current_editor.currentCharFormatChanged.connect(
             self.on_editor_selection_change
         )
-        self.current_editor.document().modificationChanged.connect(self.update_tab_name)
+        self.current_editor.document().modificationChanged.connect(self.update_current_tab_name)
 
     def open_file(self, selected_file=""):
         print(
@@ -233,7 +233,7 @@ class MainWindow(QMainWindow):
             # prompt name change so it instantly updates the tab name
             # with the new file name (fixes issue where tab name does not update if modification state is same)
             # such as if file is not edited before saving
-            self.update_tab_name()
+            self.update_current_tab_name()
             print(
                 "file saved to",
                 selected_save_file_path,
@@ -246,7 +246,7 @@ class MainWindow(QMainWindow):
             print("file not saved", tag="editor", tag_color="green", color="white")
             return False
 
-    def update_tab_name(self, new_modification_status=None):
+    def update_current_tab_name(self, new_modification_status=None):
         # print(new_modification_status)
         if not new_modification_status:
             new_modification_status = self.current_editor.document().isModified()
@@ -254,7 +254,7 @@ class MainWindow(QMainWindow):
             self.tabs.currentIndex(),
             (
                 (self.current_editor.file_name + "*")
-                if new_modification_status
+                if new_modification_status # if file is modified, add asterisk to tab name
                 else self.current_editor.file_name
             ),
         )
@@ -268,9 +268,7 @@ class MainWindow(QMainWindow):
             self.current_editor
         ):  # if the editor exists (prevents issues when tab is closed)
             self.text_bold_action.setChecked(
-                True
-                if not self.current_editor.fontWeight() == QFont.Weight.Normal
-                else False
+                True if self.current_editor.font_bold() else False
             )
             self.text_underline_action.setChecked(
                 True if self.current_editor.fontUnderline() else False
@@ -278,9 +276,8 @@ class MainWindow(QMainWindow):
             self.text_italic_action.setChecked(
                 True if self.current_editor.fontItalic() else False
             )
-            with QSignalBlocker(
-                self.font_combo_box_widget
-            ):  # block font combobox signal to prevent loop where upon selection change,
+            with QSignalBlocker(self.font_combo_box_widget):  
+                # block font combobox signal to prevent loop where upon selection change,
                 # the font combobox changes font which changes font of selected text
                 self.font_combo_box_widget.setCurrentFont(
                     self.current_editor.currentFont()
