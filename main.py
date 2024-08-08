@@ -211,13 +211,13 @@ class MainWindow(QMainWindow):
             selected_save_file_path, _ = QFileDialog.getSaveFileName(
                 self, "Save File", "", supported_file_filter
             )
-            # grab extension from file path 
+            # grab extension from file path
             # so that the user can enter any extension without selecting the specific filter
             selected_file_extension = Path(selected_save_file_path).suffix
             # if (
             #     selected_save_file_path # if file path is not empty
             #     # and file extension does not match
-            #     and Path(selected_save_file_path).suffix != selected_file_extension 
+            #     and Path(selected_save_file_path).suffix != selected_file_extension
             # ):
             #     # add extension to file path if it does not exist
             #     selected_save_file_path += selected_file_extension
@@ -230,7 +230,10 @@ class MainWindow(QMainWindow):
             self.current_editor.set_file_path(selected_save_file_path)
             self.current_editor.document().setModified(False)
             prepend_recent_file_list(selected_save_file_path)
-            # self.update_tab_name() # prompt name change so it instantly updates the tab name
+            # prompt name change so it instantly updates the tab name
+            # with the new file name (fixes issue where tab name does not update if modification state is same)
+            # such as if file is not edited before saving
+            self.update_tab_name()
             print(
                 "file saved to",
                 selected_save_file_path,
@@ -243,7 +246,8 @@ class MainWindow(QMainWindow):
             print("file not saved", tag="editor", tag_color="green", color="white")
             return False
 
-    def update_tab_name(self, new_modification_status):
+    def update_tab_name(self, new_modification_status=None):
+        # print(new_modification_status)
         if not new_modification_status:
             new_modification_status = self.current_editor.document().isModified()
         self.tabs.setTabText(
