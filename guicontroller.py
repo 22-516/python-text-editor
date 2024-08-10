@@ -2,7 +2,6 @@ from PyQt6.QtCore import * #temp
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 
-import random
 from historycontroller import *
 
 class FileContainer(QWidget):
@@ -18,10 +17,15 @@ class FileContainer(QWidget):
         vertical_file_button_frame = QFrame()
 
         self.open_file_button = QPushButton("Open File", self)
-        #self.open_file_button.clicked.connect(self.OpenFileButton)
+        # self.open_file_button.clicked.connect(self.OpenFileButton)
 
         self.remove_file_button = QPushButton("Remove File", self)
         self.remove_file_button.clicked.connect(self.remove_file_button_pressed)
+        
+        self.open_file_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.MinimumExpanding)
+        self.remove_file_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.MinimumExpanding)
+        vertical_file_button_frame.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        file_name_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         vertical_file_button_layout.addWidget(self.open_file_button)
         vertical_file_button_layout.addWidget(self.remove_file_button)
@@ -33,7 +37,7 @@ class FileContainer(QWidget):
         self.setLayout(horizontal_button_layout)
 
     def remove_file_button_pressed(self):
-        #print("clicked remove file button", self.label_name)
+        # print("clicked remove file button", self.label_name)
         remove_path_from_recent_file_list(self.label_name)
         self.setParent(None)
         # self.hide()
@@ -110,5 +114,5 @@ class TabCloseDialog(QMessageBox):
         self.setDefaultButton(QMessageBox.StandardButton.Save)
         self.setEscapeButton(QMessageBox.StandardButton.Cancel)
 
-#def OpenFileFromHomePage():
-#    def 
+# def OpenFileFromHomePage():
+#    def
