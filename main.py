@@ -20,13 +20,13 @@ from PyQt6.QtWidgets import (
     QToolBar,
     QMessageBox,
     QApplication,
+    QComboBox
 )
 
 from guicontroller import *  # FileContainer, TabCloseDialog
 from texteditor import *
 from historycontroller import *
 from filescontroller import *
-
 
 class MainWindow(QMainWindow):
     """The main window of the text editor."""
@@ -45,12 +45,15 @@ class MainWindow(QMainWindow):
 
         self.open_file_action = QAction("&Open", self)
         self.open_file_action.triggered.connect(self.open_file)
+        self.open_file_action.setShortcut(QKeySequence("Ctrl+O"))
 
         self.save_file_action = QAction("&Save", self)
         self.save_file_action.triggered.connect(self.save_file)
+        self.save_file_action.setShortcut(QKeySequence("Ctrl+S"))
 
         self.save_as_file_action = QAction("&Save As", self)
         self.save_as_file_action.triggered.connect(partial(self.save_file, True))
+        self.save_as_file_action.setShortcut(QKeySequence("Ctrl+Shift+S"))
 
         self.home_page_action = QAction("&Home", self)
         self.home_page_action.triggered.connect(self.open_home_page)
@@ -64,6 +67,7 @@ class MainWindow(QMainWindow):
         self.text_bold_action.setIcon(
             QIcon(os.path.join("images", "icons", "edit-bold.png"))
         )
+        self.text_bold_action.setShortcut(QKeySequence("Ctrl+B"))
 
         self.text_underline_action = QAction("&Underline", self)
         self.text_underline_action.triggered.connect(self.format_text_underline)
@@ -71,6 +75,7 @@ class MainWindow(QMainWindow):
         self.text_underline_action.setIcon(
             QIcon(os.path.join("images", "icons", "edit-underline.png"))
         )
+        self.text_underline_action.setShortcut(QKeySequence("Ctrl+U"))
 
         self.text_italic_action = QAction("&Italic", self)
         self.text_italic_action.triggered.connect(self.format_text_italics)
@@ -78,12 +83,18 @@ class MainWindow(QMainWindow):
         self.text_italic_action.setIcon(
             QIcon(os.path.join("images", "icons", "edit-italic.png"))
         )
+        self.text_italic_action.setShortcut(QKeySequence("Ctrl+I"))
+        
         # objects
         self.font_combo_box_widget = QFontComboBox(self)
         self.font_combo_box_widget.setEditable(False)
         self.font_combo_box_widget.currentFontChanged.connect(self.format_text_font)
         # set to latin for inital testing with english fonts
         self.font_combo_box_widget.setWritingSystem(QFontDatabase.WritingSystem.Latin)
+        
+        self.font_size_combo_box_widget = QComboBox(self)
+        self.font_size_combo_box_widget.currentTextChanged.connect(self.format_text_font_size)
+        # self.font_size_combo_box_widget.addItems(FONT_SIZES)
 
         # initalise tabs
         # print("initalising tabs", tag="init", tag_color="magenta", color="white")
@@ -121,6 +132,7 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(self.text_underline_action)
         self.toolbar.addAction(self.text_italic_action)
         self.toolbar.addWidget(self.font_combo_box_widget)
+        self.toolbar.addWidget(self.font_size_combo_box_widget)
 
         create_file_directories()
         self.setWindowTitle("Editor")
@@ -376,6 +388,9 @@ class MainWindow(QMainWindow):
     def format_text_font(self, new_font):
         self.current_editor.setFocus()
         self.current_editor.change_font(new_font)
+        
+    def format_text_font_size(self, new_size):
+        print(new_size)
 
 
 app = QApplication(sys.argv)
