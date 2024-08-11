@@ -8,7 +8,7 @@ from functools import partial
 from print_color import print
 
 from PyQt6.QtCore import QSignalBlocker
-from PyQt6.QtGui import QFontDatabase, QIcon, QAction
+from PyQt6.QtGui import QFontDatabase, QIcon, QAction, QKeySequence
 from PyQt6.QtWidgets import (
     QMainWindow,
     QFontComboBox,
@@ -33,7 +33,11 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-
+        
+        # initalise editor
+        self.current_editor = TextEditor()
+        self.home_window = None
+        
         # initalise actions and objects
         self.new_page_action = QAction("&New Page", self)
         # self.button_action.setToolTip("tooltip")
@@ -117,10 +121,6 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(self.text_underline_action)
         self.toolbar.addAction(self.text_italic_action)
         self.toolbar.addWidget(self.font_combo_box_widget)
-
-        # initalise editor
-        self.current_editor = None
-        self.home_window = None
 
         create_file_directories()
         self.setWindowTitle("Editor")
