@@ -23,7 +23,7 @@ from PyQt6.QtWidgets import (
     QComboBox
 )
 
-from guicontroller import *  # FileContainer, TabCloseDialog
+from guilib import *  # FileContainer, TabCloseDialog
 from texteditor import *
 from historycontroller import *
 from filescontroller import *
@@ -368,7 +368,7 @@ class MainWindow(QMainWindow):
         confirm_history_files_exist()
         for file_path in fetch_recent_file_list():
             print(file_path)
-            self.home_window.AddButton(temp_container := FileContainer(file_path))
+            self.home_window.add_button(temp_container := FileContainer(file_path))
             temp_container.open_file_button.clicked.connect(
                 partial(self.open_file, temp_container.label_name)
             )  # so the buttons have functionality
@@ -392,10 +392,10 @@ class MainWindow(QMainWindow):
     def format_text_font_size(self, new_size):
         print(new_size)
 
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
 
-app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
 
-window = MainWindow()
-window.show()
-
-app.exec()
+    app.exec()
