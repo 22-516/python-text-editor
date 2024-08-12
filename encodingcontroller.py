@@ -6,6 +6,9 @@ def tuple_rgb_to_hex(r, g, b):
     return f"#{int(round(r)):02x}{int(round(g)):02x}{int(round(b)):02x}"
 
 def hex_to_tuple_rgb(hex_code):
+    if not hex_code:
+        print("failed to decode from hex")
+        return None
     hex_code = hex_code.lstrip('#')
     rgb = tuple(int(hex_code[i:i+2], 16) for i in (0, 2, 4))
     return rgb
