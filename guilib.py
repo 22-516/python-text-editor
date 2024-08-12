@@ -104,12 +104,13 @@ class SettingsWindow(QWidget):
 
         # self.frame = QFrame(self)
 
-        self.form_layout = QFormLayout(self)        
+        self.form_layout = QFormLayout(self)       
         self.form_layout.setSpacing(10)
 
         print(user_settings_profile)
-        for val in enumerate(user_settings_profile):
-            print(val)
+        for val, key in enumerate(user_settings_profile):
+            # if key in 
+            print(user_settings_profile[key])
 
         # self.form_layout.addRow("Colour", ColourButtonWidget(user_settings_profile))
         # self.form_layout.addRow("Colou2r", ColourButtonWidget(user_settings_profile))

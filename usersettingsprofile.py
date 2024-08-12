@@ -1,5 +1,6 @@
 from profilescontroller import get_db_column_names, get_profile_from_username, package_as_zip
-from encodingcontroller import ENCODED_ITEMS, decode_from_db
+from encodedtypes import ENCODING_TYPE
+from encodingcontroller import decode_from_db_value
 
 # ENCODED_ITEMS = [
 #     "default_font_colour",
@@ -31,9 +32,9 @@ class UserSettingsProfile:
         return self.user_data.__str__()
 
     def __getitem__(self, key):
-        if key in ENCODED_ITEMS:
+        if key in ENCODING_TYPE:
             print(key, "needs to be decoded", self.user_data[key]) #test
-            return decode_from_db(key, self.user_data[key])
+            return decode_from_db_value(key, self.user_data[key])
         
         return self.user_data[key]
 

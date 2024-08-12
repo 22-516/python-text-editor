@@ -80,6 +80,9 @@ def get_db_column_names():
     return column_names
 
 def package_as_zip(data_list):
+    if not data_list:
+        return None
+    
     column_names = get_db_column_names()
 
     packaged = zip(column_names, data_list)
