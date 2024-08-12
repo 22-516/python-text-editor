@@ -102,47 +102,90 @@ class HomeWindow(QTabWidget):
 
 
 class ColourButtonWidget(QFrame):
-    def __init__(self, rgb: tuple):
+    colour_signal = pyqtSignal(str, tuple)
+    def __init__(self, value_type, rgb: tuple):
         if not rgb:
+            rgb = (0, 0, 0)
             # show black as the colour to indicate no data
             # user can still select (0,0,0) to force black
             # as the selected colour - black is not the default
             # but a placeholder
-            rgb = (0, 0, 0)
         super().__init__()
         self.setAutoFillBackground(True)
+        self.colour_dialog = QColorDialog()
+        self.value_type = value_type
         self.new_palette = QPalette()
         self.new_palette.setColor(QPalette.ColorRole.Window, QColor().fromRgb(*rgb))
         self.setPalette(self.new_palette)
 
+    def set_colour(self, rgb: tuple):
+        if not rgb:
+            self.new_palette.setColor(QPalette.ColorRole.Window, QColor().fromRgb(0,0,0))
+        else:
+            self.new_palette.setColor(QPalette.ColorRole.Window, QColor().fromRgb(*rgb))
+        self.setPalette(self.new_palette)
+        self.colour_signal.emit(self.value_type, rgb if rgb is not None else tuple())
+
+    # overwrite mouse press event to open colour dialog
+    def mousePressEvent(self, mouse_event: QMouseEvent):
+        if mouse_event.button() == Qt.MouseButton.LeftButton:
+            print("left")
+            self.colour_dialog.setCurrentColor(QColor().fromRgb(*self.new_palette.color(QPalette.ColorRole.Window).getRgb()))
+            self.colour_dialog.currentColorChanged.connect(lambda color: self.set_colour(color.getRgb()))
+            self.colour_dialog.show()
+        elif mouse_event.button() == Qt.MouseButton.RightButton:
+            print("right")
+            self.set_colour(None)
+
+        # self.colour_button_clicked_signal.emit(self.new_palette, self.new_palette.color(QPalette.ColorRole.Window).getRgb())
+
+
 class SettingsWindow(QWidget):
-    row_clicked_signal = pyqtSignal(UserSettingsProfile)
+    settings_changed_signal = pyqtSignal(UserSettingsProfile)
     def __init__(self, user_settings_profile: UserSettingsProfile):
         super().__init__()
 
         self.setWindowTitle("Settings")
 
         # self.frame = QFrame(self)
-
+        self.user_settings_profile = user_settings_profile
         self.form_layout = QFormLayout(self)
         self.form_layout.setSpacing(10)
 
-        print(user_settings_profile)
-        for val, key in enumerate(user_settings_profile):
+        print(self.user_settings_profile)
+        for val, key in enumerate(self.user_settings_profile):
             # if key in
             if key in ENCODING_TYPE:
                 match ENCODING_TYPE[key]:
                     case EncodeType.HEX:
                         self.form_layout.addRow(
-                            key, ColourButtonWidget(user_settings_profile[key])
+                            key,
+                            new_widget := ColourButtonWidget(
+                                key, self.user_settings_profile[key]
+                            ),
                         )
-                        # self.row_clicked_signal.emit()
-                        print(user_settings_profile[key])
+                        new_widget.colour_signal.connect(self.update_settings_profile)
 
         # self.form_layout.addRow("Colour", ColourButtonWidget(user_settings_profile))
         # self.form_layout.addRow("Colou2r", ColourButtonWidget(user_settings_profile))
 
         self.setLayout(self.form_layout)
+
+    #@pyqtSlot(str, tuple)
+    def update_settings_profile(self,value_key, value):
+        #print(value_key, value)
+        if type(value) == tuple:
+            if len(value) == 0:
+                value = None
+                # empty tuple is not allowed, set to None
+        
+        self.user_settings_profile[value_key] = value
+        #print(self.user_settings_profile)
+        #print(type(self.user_settings_profile))
+        
+        self.settings_changed_signal.emit(self.user_settings_profile)
+        
+        
 
 
 class TabCloseDialog(QMessageBox):
