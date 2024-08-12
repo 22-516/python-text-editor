@@ -1,9 +1,11 @@
-from PyQt6.QtCore import * #temp
+from PyQt6.QtCore import *  # temp
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 
 from historycontroller import *
 from usersettingsprofile import UserSettingsProfile
+from encodedtypes import ENCODING_TYPE, EncodeType
+
 
 class FileContainer(QWidget):
     def __init__(self, file_path=""):
@@ -22,11 +24,19 @@ class FileContainer(QWidget):
 
         self.remove_file_button = QPushButton("Remove File", self)
         self.remove_file_button.clicked.connect(self.remove_file_button_pressed)
-        
-        self.open_file_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.MinimumExpanding)
-        self.remove_file_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.MinimumExpanding)
-        vertical_file_button_frame.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-        file_name_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.open_file_button.setSizePolicy(
+            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.MinimumExpanding
+        )
+        self.remove_file_button.setSizePolicy(
+            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.MinimumExpanding
+        )
+        vertical_file_button_frame.setSizePolicy(
+            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding
+        )
+        file_name_label.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum
+        )
 
         vertical_file_button_layout.addWidget(self.open_file_button)
         vertical_file_button_layout.addWidget(self.remove_file_button)
@@ -42,6 +52,7 @@ class FileContainer(QWidget):
         remove_path_from_recent_file_list(self.label_name)
         self.setParent(None)
         # self.hide()
+
 
 class HomeWindow(QTabWidget):
     def __init__(self):
@@ -63,17 +74,18 @@ class HomeWindow(QTabWidget):
 
         self.recent_tab_vertical_layout = QVBoxLayout()
 
-        '''for file_path in FetchRecentFileList():
+        """for file_path in FetchRecentFileList():
             print(file_path)
-            scrollingVLayout.addWidget(FileContainer(file_path))'''
+            scrollingVLayout.addWidget(FileContainer(file_path))"""
 
         self.recent_tab_scrolling_frame.setLayout(self.recent_tab_vertical_layout)
         self.recent_tab_page.setWidget(self.recent_tab_scrolling_frame)
 
         self.addTab(self.recent_tab_page, "Recent")
 
-    def add_button(self, button : FileContainer):
+    def add_button(self, button: FileContainer):
         self.recent_tab_vertical_layout.addWidget(button)
+
 
 # class SettingsWidget(QWidget):
 #     def __init__(self, widget_name):
@@ -88,29 +100,44 @@ class HomeWindow(QTabWidget):
 
 #         self.setLayout(self.vertical_layout)
 
+
 class ColourButtonWidget(QFrame):
-    def __init__(self, user_settings_profile : UserSettingsProfile):
+    def __init__(self, rgb: tuple):
+        if not rgb:
+            # show black as the colour to indicate no data
+            # user can still select (0,0,0) to force black
+            # as the selected colour - black is not the default
+            # but a placeholder
+            rgb = (0, 0, 0)
         super().__init__()
         self.setAutoFillBackground(True)
         self.new_palette = QPalette()
-        self.new_palette.setColor(QPalette.ColorRole.Window, QColor().fromRgb(100,255,100))
+        self.new_palette.setColor(QPalette.ColorRole.Window, QColor().fromRgb(*rgb))
         self.setPalette(self.new_palette)
 
 class SettingsWindow(QWidget):
-    def __init__(self, user_settings_profile : UserSettingsProfile):
+    row_clicked_signal = pyqtSignal(UserSettingsProfile)
+    def __init__(self, user_settings_profile: UserSettingsProfile):
         super().__init__()
 
         self.setWindowTitle("Settings")
 
         # self.frame = QFrame(self)
 
-        self.form_layout = QFormLayout(self)       
+        self.form_layout = QFormLayout(self)
         self.form_layout.setSpacing(10)
 
         print(user_settings_profile)
         for val, key in enumerate(user_settings_profile):
-            # if key in 
-            print(user_settings_profile[key])
+            # if key in
+            if key in ENCODING_TYPE:
+                match ENCODING_TYPE[key]:
+                    case EncodeType.HEX:
+                        self.form_layout.addRow(
+                            key, ColourButtonWidget(user_settings_profile[key])
+                        )
+                        # self.row_clicked_signal.emit()
+                        print(user_settings_profile[key])
 
         # self.form_layout.addRow("Colour", ColourButtonWidget(user_settings_profile))
         # self.form_layout.addRow("Colou2r", ColourButtonWidget(user_settings_profile))
@@ -124,7 +151,9 @@ class TabCloseDialog(QMessageBox):
         self.setIcon(QMessageBox.Icon.Question)
         self.setWindowTitle("Confirmation")
         self.setText("Unsaved Changes")
-        self.setInformativeText("There are unsaved changes. Would you like to save your changes or discard them?")
+        self.setInformativeText(
+            "There are unsaved changes. Would you like to save your changes or discard them?"
+        )
 
         self.setStandardButtons(
             QMessageBox.StandardButton.Save
@@ -134,12 +163,14 @@ class TabCloseDialog(QMessageBox):
         self.setDefaultButton(QMessageBox.StandardButton.Save)
         self.setEscapeButton(QMessageBox.StandardButton.Cancel)
 
+
 # def OpenFileFromHomePage():
 #    def
 
 # testing settings window
 if __name__ == "__main__":
     import sys
+
     app = QApplication(sys.argv)
 
     window = SettingsWindow(UserSettingsProfile("test1"))
