@@ -8,6 +8,7 @@ def initialise_database():
     cursor = conn.cursor()
     cursor.execute("""CREATE TABLE IF NOT EXISTS profiles
                 (
+                    current real, 
                     username text, 
                     password_hash text, 
                     default_font text, 
@@ -27,6 +28,38 @@ def initialise_database():
     conn.commit()
     
     conn.close()
+    
+def get_all_entries():
+    conn = sqlite3.connect(os.path.join(get_data_directory_path(), "userprofiles.db"))
+
+    cursor = conn.cursor()
+
+    query = """SELECT * FROM profiles"""
+    cursor.execute(query)
+
+    data_list = cursor.fetchall()
+    conn.close()
+
+    if not data_list:
+        return None
+
+    return data_list
+
+def get_current_and_username_columns():
+    conn = sqlite3.connect(os.path.join(get_data_directory_path(), "userprofiles.db"))
+
+    cursor = conn.cursor()
+
+    query = """SELECT current, username FROM profiles"""
+    cursor.execute(query)
+
+    data_list = cursor.fetchall()
+    conn.close()
+
+    if not data_list:
+        return None
+
+    return data_list
 
 def get_value_from_profile(profile_name, queried_value):
     conn = sqlite3.connect(os.path.join(get_data_directory_path(), "userprofiles.db"))

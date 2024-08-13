@@ -27,6 +27,7 @@ from guilib import *  # FileContainer, TabCloseDialog
 from texteditor import *
 from historycontroller import *
 from filescontroller import *
+from profilesmanager import *
 
 class MainWindow(QMainWindow):
     """The main window of the text editor."""
@@ -37,6 +38,9 @@ class MainWindow(QMainWindow):
         # initalise editor
         self.current_editor = TextEditor()
         self.home_window = None
+        self.settings_window = None
+        
+        self.user_settings_profile = get_current_user_profile()
         
         # initalise actions and objects
         self.new_page_action = QAction("&New Page", self)
@@ -57,6 +61,9 @@ class MainWindow(QMainWindow):
 
         self.home_page_action = QAction("&Home", self)
         self.home_page_action.triggered.connect(self.open_home_page)
+        
+        self.settings_action = QAction("&Settings", self)
+        self.settings_action.triggered.connect(self.open_settings_page)
 
         self.insert_image_action = QAction("&Insert Test Image", self)
         self.insert_image_action.triggered.connect(self.insert_image_button_pressed)
@@ -116,6 +123,7 @@ class MainWindow(QMainWindow):
         self.setMenuBar(self.menubar)
 
         self.menubar.addAction(self.home_page_action)
+        self.menubar.addAction(self.settings_action)
 
         file_menu_button = self.menubar.addMenu("File")
         file_menu_button.addAction(self.save_file_action)
@@ -133,6 +141,7 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(self.text_italic_action)
         self.toolbar.addWidget(self.font_combo_box_widget)
         self.toolbar.addWidget(self.font_size_combo_box_widget)
+
 
         create_file_directories()
         self.setWindowTitle("Editor")
@@ -374,6 +383,10 @@ class MainWindow(QMainWindow):
             )  # so the buttons have functionality
 
         self.home_window.show()
+        
+    def open_settings_page(self):
+        self.settings_window = SettingsWindow(self.user_settings_profile)
+        self.settings_window.show()
 
     # text formatting actions
     def format_text_bold(self):

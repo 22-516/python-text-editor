@@ -25,7 +25,7 @@ def check_type_validity(value_type, input_value):
     # valid_state = True
     error_message = None
     if not value_type in ENCODING_TYPE:
-        raise Exception
+        raise KeyError("value_type not in ENCODING_TYPE")
     
     encoding_format = ENCODING_TYPE[value_type]
     

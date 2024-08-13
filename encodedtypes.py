@@ -11,6 +11,7 @@ class EncodeType(Enum):
     HASH = 4
     STR = 5
     FONT = 6
+    BOOL = 7
 
 ENCODING_TYPE = {
     "default_font_colour": EncodeType.HEX,
@@ -21,5 +22,6 @@ ENCODING_TYPE = {
     "default_font": EncodeType.FONT,
     "password_hash": EncodeType.HASH,
     "font_size_collection": EncodeType.LIST,
-    "default_font_size": EncodeType.INT
+    "default_font_size": EncodeType.INT,
+    "current": EncodeType.BOOL
 }
