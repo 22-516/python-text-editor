@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import *
 from historycontroller import *
 from usersettingsprofile import UserSettingsProfile
 from encodedtypes import ENCODING_TYPE, EncodeType
+from encodingcontroller import check_type_validity
 
 
 class FileContainer(QWidget):
@@ -100,12 +101,31 @@ class HomeWindow(QTabWidget):
 
 #         self.setLayout(self.vertical_layout)
 
+class StringWidget(QLineEdit):
+    string_signal = pyqtSignal(str, str)
+    def __init__(self, value_type, string_value : str):
+        super().__init__()
+        self.value_type = value_type
+        
+        self.setText(string_value)
+        
+        self.setPlaceholderText("Enter Text:")
+        self.editingFinished.connect(self.editing_finished)
+        
+    def editing_finished(self):
+        print(self.text())
+        self.string_signal.emit(self.value_type, self.text())
+
+class HashStringWidget(StringWidget):
+    def __init__(self, value_type, string_value : str):
+        super().__init__(value_type, None)
+        super().setEchoMode(QLineEdit.EchoMode.Password)
 
 class ColourButtonWidget(QFrame):
     colour_signal = pyqtSignal(str, tuple)
-    def __init__(self, value_type, rgb: tuple):
-        if not rgb:
-            rgb = (0, 0, 0)
+    def __init__(self, value_type, rgb_value: tuple):
+        if not rgb_value:
+            rgb_value = (0, 0, 0)
             # show black as the colour to indicate no data
             # user can still select (0,0,0) to force black
             # as the selected colour - black is not the default
@@ -115,16 +135,16 @@ class ColourButtonWidget(QFrame):
         self.colour_dialog = QColorDialog()
         self.value_type = value_type
         self.new_palette = QPalette()
-        self.new_palette.setColor(QPalette.ColorRole.Window, QColor().fromRgb(*rgb))
+        self.new_palette.setColor(QPalette.ColorRole.Window, QColor().fromRgb(*rgb_value))
         self.setPalette(self.new_palette)
 
-    def set_colour(self, rgb: tuple):
-        if not rgb:
+    def set_colour(self, rgb_value: tuple):
+        if not rgb_value:
             self.new_palette.setColor(QPalette.ColorRole.Window, QColor().fromRgb(0,0,0))
         else:
-            self.new_palette.setColor(QPalette.ColorRole.Window, QColor().fromRgb(*rgb))
+            self.new_palette.setColor(QPalette.ColorRole.Window, QColor().fromRgb(*rgb_value))
         self.setPalette(self.new_palette)
-        self.colour_signal.emit(self.value_type, rgb if rgb is not None else tuple())
+        self.colour_signal.emit(self.value_type, rgb_value if rgb_value is not None else tuple())
 
     # overwrite mouse press event to open colour dialog
     def mousePressEvent(self, mouse_event: QMouseEvent):
@@ -147,14 +167,36 @@ class SettingsWindow(QWidget):
 
         self.setWindowTitle("Settings")
 
-        # self.frame = QFrame(self)
         self.user_settings_profile = user_settings_profile
+        # self.frame = QFrame(self)
+        self.vertical_layout = QVBoxLayout(self)
+        
+        self.username_combo_box = QComboBox()
+        self.username_combo_box.insertItem(1, "testing")
+        self.username_combo_box.setEditable(True)
+        self.vertical_layout.addWidget(self.username_combo_box)
+        
         self.form_layout = QFormLayout(self)
         self.form_layout.setSpacing(10)
+        
+        self.error_message = QErrorMessage()
+        
+        self.populate_form_layout()
 
+        # self.form_layout.addRow("Colour", ColourButtonWidget(user_settings_profile))
+        # self.form_layout.addRow("Colou2r", ColourButtonWidget(user_settings_profile))
+
+        #self.setLayout(self.form_layout)
+        self.vertical_layout.addLayout(self.form_layout)
+        self.setLayout(self.vertical_layout)
+
+    def reset_settings_page(self):
+        while self.form_layout.rowCount() >= 1:
+            self.form_layout.removeRow(0)
+
+    def populate_form_layout(self):
         print(self.user_settings_profile)
         for val, key in enumerate(self.user_settings_profile):
-            # if key in
             if key in ENCODING_TYPE:
                 match ENCODING_TYPE[key]:
                     case EncodeType.HEX:
@@ -165,21 +207,32 @@ class SettingsWindow(QWidget):
                             ),
                         )
                         new_widget.colour_signal.connect(self.update_settings_profile)
-
-        # self.form_layout.addRow("Colour", ColourButtonWidget(user_settings_profile))
-        # self.form_layout.addRow("Colou2r", ColourButtonWidget(user_settings_profile))
-
-        self.setLayout(self.form_layout)
-
-    #@pyqtSlot(str, tuple)
-    def update_settings_profile(self,value_key, value):
-        #print(value_key, value)
-        if type(value) == tuple:
-            if len(value) == 0:
-                value = None
-                # empty tuple is not allowed, set to None
+                    case EncodeType.STR:
+                        self.form_layout.addRow(
+                            key,
+                            new_widget := StringWidget(
+                                key, self.user_settings_profile[key]
+                            ),
+                        )
+                        new_widget.string_signal.connect(self.update_settings_profile)
+                    case EncodeType.HASH:
+                        self.form_layout.addRow(
+                            key,
+                            new_widget := HashStringWidget(
+                                key, self.user_settings_profile[key]
+                            ),
+                        )
+                        new_widget.string_signal.connect(self.update_settings_profile)
+    
+    def update_settings_profile(self, value_type, value):
+        validity_state, value = check_type_validity(value_type, value)
+        if validity_state != None:
+            print(validity_state)
+            self.error_message.showMessage(validity_state)
+            self.reset_settings_page()
+            self.populate_form_layout()
         
-        self.user_settings_profile[value_key] = value
+        self.user_settings_profile[value_type] = value
         #print(self.user_settings_profile)
         #print(type(self.user_settings_profile))
         

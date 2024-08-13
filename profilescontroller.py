@@ -12,6 +12,7 @@ def initialise_database():
                     password_hash text, 
                     default_font text, 
                     default_font_size real, 
+                    font_size_collection text,
                     default_font_colour text,
                     default_font_highlight_colour text, 
                     editor_background_colour text, 
