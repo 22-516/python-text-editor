@@ -163,19 +163,16 @@ class ColourButtonWidget(QFrame):
 class SettingsWindow(QWidget):
     settings_changed_signal = pyqtSignal(UserSettingsProfile)
     settings_saved_signal = pyqtSignal(UserSettingsProfile)
-    def __init__(self, all_profiles, current_user_settings_profile: UserSettingsProfile):
+    settings_deleted_signal = pyqtSignal(str)
+    def __init__(self, all_profiles):
         super().__init__()
 
         self.setWindowTitle("Settings")
 
-        self.user_settings_profile = current_user_settings_profile
+        #self.user_settings_profile = current_user_settings_profile
         # self.frame = QFrame(self)
         self.vertical_layout = QVBoxLayout(self)
-
         self.combo_box_horizontal_layout = QHBoxLayout()
-
-        self.profile_title_label = QLabel("Currently Editing Profile:")
-        self.combo_box_horizontal_layout.addWidget(self.profile_title_label)
 
         self.username_combo_box = QComboBox()
         self.username_combo_box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
@@ -197,18 +194,31 @@ class SettingsWindow(QWidget):
             self.username_combo_box.addItem(current_profile_username)
             self.user_settings_profile["username"] = current_profile_username
         # set index to current username
-        self.username_combo_box.setCurrentText(current_profile_username)
+        
+        if current_profile_username:
+            self.username_combo_box.setCurrentText(current_profile_username)
+        else:
+            self.username_combo_box.setCurrentIndex(0)
+            
+        self.user_settings_profile = UserSettingsProfile(current_profile_username)
 
         # self.username_combo_box.insert
 
         self.username_combo_box.activated.connect(self.profile_changed)
 
         # self.username_combo_box.editTextChanged.connect(lambda x:print(x))
-
+        
+        self.profile_title_label = QLabel("Currently Editing Profile:")
+        
+        self.profile_delete_button = QPushButton(QIcon(os.path.join("images", "icons", "minus.png")), "Delete Profile")
+        self.profile_delete_button.clicked.connect(self.delete_profile)
+        
+        self.combo_box_horizontal_layout.addWidget(self.profile_title_label)
         self.combo_box_horizontal_layout.addWidget(self.username_combo_box)
+        self.combo_box_horizontal_layout.addWidget(self.profile_delete_button)
         self.vertical_layout.addLayout(self.combo_box_horizontal_layout)
 
-        self.form_layout = QFormLayout(self)
+        self.form_layout = QFormLayout()
         self.form_layout.setSpacing(10)
 
         self.error_message = QErrorMessage()
@@ -223,6 +233,7 @@ class SettingsWindow(QWidget):
         self.setLayout(self.vertical_layout)
 
     def profile_changed(self, row_int):
+        # check if new username is valid
         success = self.update_settings_profile("username", current_username := self.username_combo_box.currentText())
         if not success:
             self.username_combo_box.removeItem(row_int)
@@ -232,6 +243,22 @@ class SettingsWindow(QWidget):
             self.user_settings_profile["username"] = current_username
             self.reset_settings_page()
             self.populate_form_layout()
+            
+    def delete_profile(self):
+        self.settings_deleted_signal.emit(self.user_settings_profile["username"])
+        
+        self.username_combo_box.removeItem(self.username_combo_box.currentIndex())
+        if self.username_combo_box.count() > 0:
+            self.username_combo_box.setCurrentIndex(0)
+            self.user_settings_profile = UserSettingsProfile(self.username_combo_box.currentText())
+        else:
+            self.user_settings_profile = UserSettingsProfile("Default")
+            self.username_combo_box.addItem("Default")
+            self.user_settings_profile["username"] = "Default"
+        
+        self.settings_saved_signal.emit(self.user_settings_profile)
+        self.reset_settings_page()
+        self.populate_form_layout()
 
     def reset_settings_page(self):
         while self.form_layout.rowCount() >= 1:
@@ -239,7 +266,7 @@ class SettingsWindow(QWidget):
 
     def populate_form_layout(self):
         print(self.user_settings_profile)
-        for val, key in enumerate(self.user_settings_profile):
+        for _, key in enumerate(self.user_settings_profile):
             if not key in ENCODING_TYPE:
                 return False
             match ENCODING_TYPE[key]:

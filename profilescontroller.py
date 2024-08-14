@@ -50,7 +50,7 @@ def get_current_and_username_columns():
 
     cursor = conn.cursor()
 
-    query = """SELECT current, username FROM profiles"""
+    query = """SELECT current, username FROM profiles WHERE username IS NOT NULL"""
     cursor.execute(query)
 
     data_list = cursor.fetchall()
@@ -120,9 +120,21 @@ def get_db_column_names():
     cursor.execute("SELECT * FROM profiles")
 
     column_names = [description[0] for description in cursor.description]
+    
     conn.close()
     
     return column_names
+
+def delete_profile(profile_name):
+    conn = sqlite3.connect(os.path.join(get_data_directory_path(), "userprofiles.db"))
+
+    cursor = conn.cursor()
+
+    query = """DELETE FROM profiles WHERE username=?"""
+    cursor.execute(query, (profile_name,))
+
+    conn.commit()
+    conn.close()
 
 def package_as_zip(data_list):
     if not data_list:
