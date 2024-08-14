@@ -20,7 +20,7 @@ ENCODING_TYPE = {
     "editor_colour": EncodeType.HEX,
     "username": EncodeType.STR,
     "default_font": EncodeType.FONT,
-    "password_hash": EncodeType.HASH,
+    "password": EncodeType.HASH,
     "font_size_collection": EncodeType.LIST,
     "default_font_size": EncodeType.INT,
     "current": EncodeType.BOOL

@@ -162,33 +162,69 @@ class ColourButtonWidget(QFrame):
 
 class SettingsWindow(QWidget):
     settings_changed_signal = pyqtSignal(UserSettingsProfile)
-    def __init__(self, user_settings_profile: UserSettingsProfile):
+    settings_saved_signal = pyqtSignal(list)
+    def __init__(self, all_profiles, current_user_settings_profile: UserSettingsProfile):
         super().__init__()
 
         self.setWindowTitle("Settings")
 
-        self.user_settings_profile = user_settings_profile
+        self.user_settings_profile = current_user_settings_profile
         # self.frame = QFrame(self)
         self.vertical_layout = QVBoxLayout(self)
-        
+
+        self.combo_box_horizontal_layout = QHBoxLayout()
+
+        self.profile_title_label = QLabel("Currently Editing Profile:")
+        self.combo_box_horizontal_layout.addWidget(self.profile_title_label)
+
         self.username_combo_box = QComboBox()
-        self.username_combo_box.insertItem(1, "testing")
+        self.username_combo_box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         self.username_combo_box.setEditable(True)
-        self.vertical_layout.addWidget(self.username_combo_box)
-        
+        self.username_combo_box.setDuplicatesEnabled(False)
+        # self.username_combo_box.setPlaceholderText("Select or type to create a profile")
+        current_username = None
+        for current, username in all_profiles:
+            # print(current, username)
+            self.username_combo_box.addItem(username)
+            if current:
+                current_username = username
+        # set index to current username
+        self.username_combo_box.setCurrentText(current_username)
+
+        self.username_combo_box.setInsertPolicy(QComboBox.InsertPolicy.InsertAfterCurrent)
+        # self.username_combo_box.insert
+
+        self.username_combo_box.activated.connect(self.profile_changed)
+
+        # self.username_combo_box.editTextChanged.connect(lambda x:print(x))
+
+        self.combo_box_horizontal_layout.addWidget(self.username_combo_box)
+        self.vertical_layout.addLayout(self.combo_box_horizontal_layout)
+
         self.form_layout = QFormLayout(self)
         self.form_layout.setSpacing(10)
-        
+
         self.error_message = QErrorMessage()
-        
+
         self.populate_form_layout()
 
         # self.form_layout.addRow("Colour", ColourButtonWidget(user_settings_profile))
         # self.form_layout.addRow("Colou2r", ColourButtonWidget(user_settings_profile))
 
-        #self.setLayout(self.form_layout)
+        # self.setLayout(self.form_layout)
         self.vertical_layout.addLayout(self.form_layout)
         self.setLayout(self.vertical_layout)
+
+    def profile_changed(self, row_int):
+        success = self.update_settings_profile("username", current_username :=self.username_combo_box.currentText())
+        if not success:
+            self.username_combo_box.removeItem(row_int)
+            self.username_combo_box.setCurrentText(self.user_settings_profile["username"])
+        else:
+            self.user_settings_profile = UserSettingsProfile(current_username)
+            self.user_settings_profile["username"] = current_username
+            self.reset_settings_page()
+            self.populate_form_layout()
 
     def reset_settings_page(self):
         while self.form_layout.rowCount() >= 1:
@@ -197,33 +233,34 @@ class SettingsWindow(QWidget):
     def populate_form_layout(self):
         print(self.user_settings_profile)
         for val, key in enumerate(self.user_settings_profile):
-            if key in ENCODING_TYPE:
-                match ENCODING_TYPE[key]:
-                    case EncodeType.HEX:
-                        self.form_layout.addRow(
-                            key,
-                            new_widget := ColourButtonWidget(
-                                key, self.user_settings_profile[key]
-                            ),
-                        )
-                        new_widget.colour_signal.connect(self.update_settings_profile)
-                    case EncodeType.STR:
-                        self.form_layout.addRow(
-                            key,
-                            new_widget := StringWidget(
-                                key, self.user_settings_profile[key]
-                            ),
-                        )
-                        new_widget.string_signal.connect(self.update_settings_profile)
-                    case EncodeType.HASH:
-                        self.form_layout.addRow(
-                            key,
-                            new_widget := HashStringWidget(
-                                key, self.user_settings_profile[key]
-                            ),
-                        )
-                        new_widget.string_signal.connect(self.update_settings_profile)
-    
+            if not key in ENCODING_TYPE:
+                return False
+            match ENCODING_TYPE[key]:
+                case EncodeType.HEX:
+                    self.form_layout.addRow(
+                        key,
+                        new_widget := ColourButtonWidget(
+                            key, self.user_settings_profile[key]
+                        ),
+                    )
+                    new_widget.colour_signal.connect(self.update_settings_profile)
+                case EncodeType.STR:
+                    self.form_layout.addRow(
+                        key,
+                        new_widget := StringWidget(
+                            key, self.user_settings_profile[key]
+                        ),
+                    )
+                    new_widget.string_signal.connect(self.update_settings_profile)
+                case EncodeType.HASH:
+                    self.form_layout.addRow(
+                        key,
+                        new_widget := HashStringWidget(
+                            key, self.user_settings_profile[key]
+                        ),
+                    )
+                    new_widget.string_signal.connect(self.update_settings_profile)
+
     def update_settings_profile(self, value_type, value):
         validity_state, value = check_type_validity(value_type, value)
         if validity_state != None:
@@ -231,14 +268,14 @@ class SettingsWindow(QWidget):
             self.error_message.showMessage(validity_state)
             self.reset_settings_page()
             self.populate_form_layout()
-        
+            return False
+
         self.user_settings_profile[value_type] = value
-        #print(self.user_settings_profile)
-        #print(type(self.user_settings_profile))
-        
+        # print(self.user_settings_profile)
+        # print(type(self.user_settings_profile))
+
         self.settings_changed_signal.emit(self.user_settings_profile)
-        
-        
+        return True
 
 
 class TabCloseDialog(QMessageBox):

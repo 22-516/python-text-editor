@@ -4,12 +4,17 @@ from usersettingsprofile import UserSettingsProfile
 def save_settings_profile_to_db(editor_settings_profile : UserSettingsProfile):
     print(editor_settings_profile)
     
+    
 def get_current_user_profile():
     data_list = get_current_and_username_columns()
+    
+    if not data_list:
+        return UserSettingsProfile(None)
     
     current_profile = None
     for _, profile in enumerate(data_list):
         #print(profile)
+        # if the first column is 1, it means the current profile
         if profile[0]:
             # integer value 1 == True
             current_profile = profile[1]

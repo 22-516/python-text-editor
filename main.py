@@ -385,7 +385,10 @@ class MainWindow(QMainWindow):
         self.home_window.show()
         
     def open_settings_page(self):
-        self.settings_window = SettingsWindow(self.user_settings_profile)
+        self.settings_window = SettingsWindow(get_current_and_username_columns(), self.user_settings_profile)
+        
+        #self.settings_window.settings_changed_signal.connect
+        
         self.settings_window.show()
 
     # text formatting actions

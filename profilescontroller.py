@@ -10,7 +10,7 @@ def initialise_database():
                 (
                     current real, 
                     username text, 
-                    password_hash text, 
+                    password text, 
                     default_font text, 
                     default_font_size real, 
                     font_size_collection text,
