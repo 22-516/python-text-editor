@@ -23,7 +23,7 @@ class UserSettingsProfile:
                 value = value_tuple[1]
                 # print(column_name, value, "kwfefkjwekfwefjkwe")
                 if column_name in self.user_data:
-                    self.user_data[column_name] = value
+                    self.user_data[column_name] = decode_from_db_value(column_name, value)
                     
             # print("jkakjjkfjkwjkfwajkfwe")
             # print(self.user_data)
@@ -32,9 +32,9 @@ class UserSettingsProfile:
         return self.user_data.__str__()
 
     def __getitem__(self, key):
-        if key in ENCODING_TYPE:
-            print(key, "needs to be decoded", self.user_data[key]) #test
-            return decode_from_db_value(key, self.user_data[key])
+        # if key in ENCODING_TYPE:
+        #     print(key, "needs to be decoded", self.user_data[key]) #test
+        #     return decode_from_db_value(key, self.user_data[key])
         
         return self.user_data[key]
 

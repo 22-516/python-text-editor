@@ -91,6 +91,17 @@ def get_profile_from_username(profile_name):
 
     return data_list
 
+def add_new_profile(username):
+    conn = sqlite3.connect(os.path.join(get_data_directory_path(), "userprofiles.db"))
+
+    cursor = conn.cursor()
+    query = """INSERT INTO profiles (username) VALUES (?)"""
+    cursor.execute(query, (username,))
+
+    conn.commit()
+    conn.close()
+
+
 def save_value_to_profile(profile_name, value_name, value):
     conn = sqlite3.connect(os.path.join(get_data_directory_path(), "userprofiles.db"))
 

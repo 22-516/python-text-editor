@@ -355,6 +355,13 @@ class MainWindow(QMainWindow):
                 event.ignore()
                 return
         event.accept()
+        
+    def settings_updated(self, temp_settings_profile):
+        self.user_settings_profile = temp_settings_profile
+        
+    def save_settings(self, temp_settings_profile):
+        self.user_settings_profile = temp_settings_profile
+        save_settings_profile_to_db(self.user_settings_profile)
 
     #   actions
     def new_page_button_pressed(self):
@@ -388,6 +395,8 @@ class MainWindow(QMainWindow):
         self.settings_window = SettingsWindow(get_current_and_username_columns(), self.user_settings_profile)
         
         #self.settings_window.settings_changed_signal.connect
+        self.settings_window.settings_changed_signal.connect(self.settings_updated)
+        self.settings_window.settings_saved_signal.connect(self.save_settings)
         
         self.settings_window.show()
 

@@ -4,7 +4,8 @@ import re
 
 from encodedtypes import ENCODING_TYPE, EncodeType, STRING_MAX_LENGTH, STRING_ALLOW_NUMBERS, STRING_ALLOW_SPECIAL_CHARACTERS
 
-def tuple_rgb_to_hex(r, g, b):
+def tuple_rgb_to_hex(r, g, b, _=None):
+    # unused var as PyQt rgb values include transparency (unneeded) so we discard
     return f"#{int(round(r)):02x}{int(round(g)):02x}{int(round(b)):02x}"
 
 def hex_to_tuple_rgb(hex_code):
@@ -51,12 +52,16 @@ def check_type_validity(value_type, input_value):
     return error_message, input_value
 
 def decode_from_db_value(db_column, db_value):
+    if not db_value:
+        return None
     if db_column in ENCODING_TYPE:
         if ENCODING_TYPE[db_column] == EncodeType.HEX:
             return hex_to_tuple_rgb(db_value)
     return db_value
 
 def encode_to_db_value(db_column, db_value):
+    if not db_value:
+        return None
     if db_column in ENCODING_TYPE:
         if ENCODING_TYPE[db_column] == EncodeType.HEX:
             return tuple_rgb_to_hex(*db_value)

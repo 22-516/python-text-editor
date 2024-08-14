@@ -162,7 +162,7 @@ class ColourButtonWidget(QFrame):
 
 class SettingsWindow(QWidget):
     settings_changed_signal = pyqtSignal(UserSettingsProfile)
-    settings_saved_signal = pyqtSignal(list)
+    settings_saved_signal = pyqtSignal(UserSettingsProfile)
     def __init__(self, all_profiles, current_user_settings_profile: UserSettingsProfile):
         super().__init__()
 
@@ -181,8 +181,10 @@ class SettingsWindow(QWidget):
         self.username_combo_box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         self.username_combo_box.setEditable(True)
         self.username_combo_box.setDuplicatesEnabled(False)
+        self.username_combo_box.setInsertPolicy(QComboBox.InsertPolicy.InsertAfterCurrent)
         # self.username_combo_box.setPlaceholderText("Select or type to create a profile")
         current_profile_username = None
+        # if the database contains user data
         if all_profiles:
             for current, username in all_profiles:
                 # print(current, username)
@@ -191,13 +193,12 @@ class SettingsWindow(QWidget):
                     current_profile_username = username
         else:
             # print("AAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-            self.username_combo_box.addItem("Default")
             current_profile_username = "Default"
-            self.user_settings_profile["username"] = "Default"
+            self.username_combo_box.addItem(current_profile_username)
+            self.user_settings_profile["username"] = current_profile_username
         # set index to current username
         self.username_combo_box.setCurrentText(current_profile_username)
 
-        self.username_combo_box.setInsertPolicy(QComboBox.InsertPolicy.InsertAfterCurrent)
         # self.username_combo_box.insert
 
         self.username_combo_box.activated.connect(self.profile_changed)
@@ -282,7 +283,11 @@ class SettingsWindow(QWidget):
 
         self.settings_changed_signal.emit(self.user_settings_profile)
         return True
-
+    
+    def closeEvent(self, event):
+        print("settings window closed")
+        self.settings_saved_signal.emit(self.user_settings_profile)
+        event.accept()
 
 class TabCloseDialog(QMessageBox):
     def __init__(self):
