@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import *
 
 from historycontroller import *
 from usersettingsprofile import UserSettingsProfile
-from encodedtypes import ENCODING_TYPE, EncodeType
+from encodedtypes import ENCODING_TYPE, EncodeType, DEFAULT_FONT_SIZE_COLLECTION
 from encodingcontroller import check_type_validity
 
 
@@ -120,7 +120,62 @@ class HashStringWidget(StringWidget):
     def __init__(self, value_type, string_value : str):
         super().__init__(value_type, None)
         super().setEchoMode(QLineEdit.EchoMode.Password)
-
+        
+class StringListWidget(QWidget):
+    string_signal = pyqtSignal(str, list)
+    def __init__(self, value_type, input_list):
+        super().__init__()
+        self.value_type = value_type
+        self.integers = []
+        
+        self.horizontal_layout = QHBoxLayout(self)
+        
+        self.list_widget = QListWidget()
+        self.list_widget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        
+        self.vertical_layout = QVBoxLayout()
+        
+        self.move_up_button = QPushButton()
+        self.move_up_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.move_down_button = QPushButton()
+        self.move_down_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.new_item_button = QPushButton()
+        self.new_item_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.remove_item_button = QPushButton()
+        self.remove_item_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        
+        self.vertical_layout.addWidget(self.move_up_button)
+        self.vertical_layout.addWidget(self.move_down_button)
+        self.vertical_layout.addWidget(self.new_item_button)
+        self.vertical_layout.addWidget(self.remove_item_button)
+        
+        self.horizontal_layout.addWidget(self.list_widget)
+        self.horizontal_layout.addLayout(self.vertical_layout)
+        
+        if not input_list:
+            input_list = DEFAULT_FONT_SIZE_COLLECTION
+        for _, value in enumerate(input_list):
+            item = QListWidgetItem()
+            self.integers.append(item)
+            item.setText(str(value))
+            self.list_widget.addItem(item)
+            self.list_widget.openPersistentEditor(item)
+            
+        self.list_widget.itemChanged.connect(self.send_list_signal)
+        
+    def get_list_items_as_list(self):
+        temp_list = []
+        for index in range(self.list_widget.count()):
+            item_widget = self.list_widget.item(index)
+            font_size = item_widget.text()
+            temp_list.append(font_size)
+            
+        print(temp_list)
+        return temp_list
+    
+    def send_list_signal(self):
+        self.string_signal.emit(self.value_type, self.get_list_items_as_list())
+            
 class ColourButtonWidget(QFrame):
     colour_signal = pyqtSignal(str, tuple)
     def __init__(self, value_type, rgb_value: tuple):
@@ -221,7 +276,7 @@ class SettingsWindow(QWidget):
         self.form_layout = QFormLayout()
         self.form_layout.setSpacing(10)
 
-        self.error_message = QErrorMessage()
+        self.error_message = QErrorMessage(self)
 
         self.populate_form_layout()
 
@@ -294,17 +349,29 @@ class SettingsWindow(QWidget):
                         ),
                     )
                     new_widget.string_signal.connect(self.update_settings_profile)
+                case EncodeType.LIST:
+                    self.form_layout.addRow(
+                        key,
+                        new_widget := StringListWidget(
+                            key, self.user_settings_profile[key]
+                        ),
+                    )
+                    new_widget.string_signal.connect(self.update_settings_profile)
 
     def update_settings_profile(self, value_type, value):
-        validity_state, value = check_type_validity(value_type, value)
+        print(value_type, value)
+        validity_state, temp_value = check_type_validity(value_type, value)
+        print(validity_state, temp_value)
         if validity_state != None:
             print(validity_state)
-            self.error_message.showMessage(validity_state)
+            _ = self.error_message.showMessage(validity_state)
+            print("alkdkawda")
             self.reset_settings_page()
             self.populate_form_layout()
             return False
 
-        self.user_settings_profile[value_type] = value
+        self.user_settings_profile[value_type] = temp_value
+        print(value_type, temp_value)
         # print(self.user_settings_profile)
         # print(type(self.user_settings_profile))
 

@@ -16,6 +16,16 @@ def hex_to_tuple_rgb(hex_code):
     rgb = tuple(int(hex_code[i:i+2], 16) for i in (0, 2, 4))
     return rgb
 
+def list_encode_to_string(input_list : list):
+    if not input_list:
+        return None
+    return "/".join(map(str, input_list))
+
+def sting_decode_to_list(input_string : str):
+    if not input_string:
+        return None
+    return input_string.split("/")
+
 def hash_password(password):
     return password #testing
 
@@ -48,6 +58,11 @@ def check_type_validity(value_type, input_value):
                     error_message = "Numbers are not allowed to be used!"
         case EncodeType.HASH:
             pass
+        case EncodeType.LIST:
+            for _, font_size in enumerate(input_value):
+                if not font_size.replace(".", "", 1).isdigit():
+                    error_message = "Only numbers are allowed to be used!"
+                    break
             
     return error_message, input_value
 
@@ -55,14 +70,24 @@ def decode_from_db_value(db_column, db_value):
     if not db_value:
         return None
     if db_column in ENCODING_TYPE:
-        if ENCODING_TYPE[db_column] == EncodeType.HEX:
-            return hex_to_tuple_rgb(db_value)
-    return db_value
+        match ENCODING_TYPE[db_column]:
+            case EncodeType.HEX:
+                return hex_to_tuple_rgb(db_value)
+            case EncodeType.LIST:
+                return sting_decode_to_list(db_value)
+            case _:
+                print("no encoding", db_column, db_value)
+                return db_value
 
 def encode_to_db_value(db_column, db_value):
     if not db_value:
         return None
     if db_column in ENCODING_TYPE:
-        if ENCODING_TYPE[db_column] == EncodeType.HEX:
-            return tuple_rgb_to_hex(*db_value)
-        return db_value
+        match ENCODING_TYPE[db_column]: 
+            case EncodeType.HEX:
+                return tuple_rgb_to_hex(*db_value)
+            case EncodeType.LIST:
+                return list_encode_to_string(db_value)
+            case _:
+                print("no encoding", db_column, db_value)
+                return db_value
