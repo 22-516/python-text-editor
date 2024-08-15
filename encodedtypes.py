@@ -48,7 +48,6 @@ class EncodeType(Enum):
     BOOL = 7
 
 ENCODING_TYPE = {
-    "default_font_colour": EncodeType.HEX,
     "editor_background_colour": EncodeType.HEX,
     "editor_colour": EncodeType.HEX,
     "username": EncodeType.STR,
