@@ -317,8 +317,9 @@ class SettingsWindow(QWidget):
             self.username_combo_box.setCurrentIndex(0)
 
         #self.user_settings_profile = UserSettingsProfile(current_profile_username)
+        self.user_settings_profile = None
 
-        self.username_combo_box.activated.connect(self.profile_changed)
+        self.username_combo_box.activated.connect(self.profile_name_changed)
         self.profile_title_label = QLabel("Currently Editing Profile:")
 
         self.profile_delete_button = QPushButton(QIcon(os.path.join("images", "icons", "minus.png")), "Delete Profile")
@@ -345,7 +346,7 @@ class SettingsWindow(QWidget):
         self.reset_settings_page()
         self.populate_form_layout()
             
-    def profile_changed(self, row_int):
+    def profile_name_changed(self, row_int):
         # check if new username is valid
         success = self.update_settings_profile("username", current_username := self.username_combo_box.currentText())
         if not success:
@@ -430,12 +431,15 @@ class SettingsWindow(QWidget):
         print(value_type, value)
         validity_state, temp_value = check_type_validity(value_type, value)
         print(validity_state, temp_value)
-        if validity_state != None:
+        if validity_state is not None:
             print(validity_state)
-            _ = self.error_message.showMessage(validity_state)
+            # self.reset_settings_page()
+            # self.populate_form_layout()
+            self.error_message.showMessage(validity_state)
             # print("alkdkawda")
-            self.reset_settings_page()
-            self.populate_form_layout()
+            
+            # self.reset_settings_page()
+            # self.populate_form_layout()
             return False
 
         self.user_settings_profile[value_type] = temp_value
