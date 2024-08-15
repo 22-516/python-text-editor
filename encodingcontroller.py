@@ -62,7 +62,6 @@ def check_type_validity(value_type, input_value):
             for _, font_size in enumerate(input_value):
                 if not font_size.replace(".", "", 1).isdigit():
                     error_message = "Only numbers are allowed to be used!"
-                    break
             
     return error_message, input_value
 

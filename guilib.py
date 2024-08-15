@@ -120,21 +120,21 @@ class HashStringWidget(StringWidget):
     def __init__(self, value_type, string_value : str):
         super().__init__(value_type, None)
         super().setEchoMode(QLineEdit.EchoMode.Password)
-        
+
 class StringListWidget(QWidget):
     string_signal = pyqtSignal(str, list)
     def __init__(self, value_type, input_list):
         super().__init__()
         self.value_type = value_type
         self.integers = []
-        
+
         self.horizontal_layout = QHBoxLayout(self)
-        
+
         self.list_widget = QListWidget()
         self.list_widget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        
+
         self.vertical_layout = QVBoxLayout()
-        
+
         self.move_up_button = QPushButton()
         self.move_up_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
         self.move_down_button = QPushButton()
@@ -143,15 +143,15 @@ class StringListWidget(QWidget):
         self.new_item_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
         self.remove_item_button = QPushButton()
         self.remove_item_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-        
+
         self.vertical_layout.addWidget(self.move_up_button)
         self.vertical_layout.addWidget(self.move_down_button)
         self.vertical_layout.addWidget(self.new_item_button)
         self.vertical_layout.addWidget(self.remove_item_button)
-        
+
         self.horizontal_layout.addWidget(self.list_widget)
         self.horizontal_layout.addLayout(self.vertical_layout)
-        
+
         if not input_list:
             input_list = DEFAULT_FONT_SIZE_COLLECTION
         for _, value in enumerate(input_list):
@@ -160,22 +160,23 @@ class StringListWidget(QWidget):
             item.setText(str(value))
             self.list_widget.addItem(item)
             self.list_widget.openPersistentEditor(item)
-            
+
         self.list_widget.itemChanged.connect(self.send_list_signal)
-        
+
     def get_list_items_as_list(self):
         temp_list = []
         for index in range(self.list_widget.count()):
             item_widget = self.list_widget.item(index)
             font_size = item_widget.text()
             temp_list.append(font_size)
-            
+            # self.list_widget.closePersistentEditor(self.list_widget.item(index))
+
         print(temp_list)
         return temp_list
-    
+
     def send_list_signal(self):
         self.string_signal.emit(self.value_type, self.get_list_items_as_list())
-            
+
 class ColourButtonWidget(QFrame):
     colour_signal = pyqtSignal(str, tuple)
     def __init__(self, value_type, rgb_value: tuple):
@@ -224,7 +225,7 @@ class SettingsWindow(QWidget):
 
         self.setWindowTitle("Settings")
 
-        #self.user_settings_profile = current_user_settings_profile
+        # self.user_settings_profile = current_user_settings_profile
         # self.frame = QFrame(self)
         self.vertical_layout = QVBoxLayout(self)
         self.combo_box_horizontal_layout = QHBoxLayout()
@@ -249,12 +250,12 @@ class SettingsWindow(QWidget):
             self.username_combo_box.addItem(current_profile_username)
             self.user_settings_profile["username"] = current_profile_username
         # set index to current username
-        
+
         if current_profile_username:
             self.username_combo_box.setCurrentText(current_profile_username)
         else:
             self.username_combo_box.setCurrentIndex(0)
-            
+
         self.user_settings_profile = UserSettingsProfile(current_profile_username)
 
         # self.username_combo_box.insert
@@ -262,12 +263,12 @@ class SettingsWindow(QWidget):
         self.username_combo_box.activated.connect(self.profile_changed)
 
         # self.username_combo_box.editTextChanged.connect(lambda x:print(x))
-        
+
         self.profile_title_label = QLabel("Currently Editing Profile:")
-        
+
         self.profile_delete_button = QPushButton(QIcon(os.path.join("images", "icons", "minus.png")), "Delete Profile")
         self.profile_delete_button.clicked.connect(self.delete_profile)
-        
+
         self.combo_box_horizontal_layout.addWidget(self.profile_title_label)
         self.combo_box_horizontal_layout.addWidget(self.username_combo_box)
         self.combo_box_horizontal_layout.addWidget(self.profile_delete_button)
@@ -278,7 +279,7 @@ class SettingsWindow(QWidget):
 
         self.error_message = QErrorMessage(self)
 
-        self.populate_form_layout()
+        # self.populate_form_layout()
 
         # self.form_layout.addRow("Colour", ColourButtonWidget(user_settings_profile))
         # self.form_layout.addRow("Colou2r", ColourButtonWidget(user_settings_profile))
@@ -298,10 +299,10 @@ class SettingsWindow(QWidget):
             self.user_settings_profile["username"] = current_username
             self.reset_settings_page()
             self.populate_form_layout()
-            
+
     def delete_profile(self):
         self.settings_deleted_signal.emit(self.user_settings_profile["username"])
-        
+
         self.username_combo_box.removeItem(self.username_combo_box.currentIndex())
         if self.username_combo_box.count() > 0:
             self.username_combo_box.setCurrentIndex(0)
@@ -310,14 +311,14 @@ class SettingsWindow(QWidget):
             self.user_settings_profile = UserSettingsProfile("Default")
             self.username_combo_box.addItem("Default")
             self.user_settings_profile["username"] = "Default"
-        
+
         self.settings_saved_signal.emit(self.user_settings_profile)
         self.reset_settings_page()
         self.populate_form_layout()
 
     def reset_settings_page(self):
-        while self.form_layout.rowCount() >= 1:
-            self.form_layout.removeRow(0)
+        for i in reversed(range(self.form_layout.count())): 
+            self.form_layout.itemAt(i).widget().setParent(None)
 
     def populate_form_layout(self):
         print(self.user_settings_profile)
@@ -332,7 +333,7 @@ class SettingsWindow(QWidget):
                             key, self.user_settings_profile[key]
                         ),
                     )
-                    new_widget.colour_signal.connect(self.update_settings_profile)
+                    new_widget.colour_signal.connect(self.signal_update_settings)
                 case EncodeType.STR:
                     self.form_layout.addRow(
                         key,
@@ -340,7 +341,7 @@ class SettingsWindow(QWidget):
                             key, self.user_settings_profile[key]
                         ),
                     )
-                    new_widget.string_signal.connect(self.update_settings_profile)
+                    new_widget.string_signal.connect(self.signal_update_settings)
                 case EncodeType.HASH:
                     self.form_layout.addRow(
                         key,
@@ -348,7 +349,7 @@ class SettingsWindow(QWidget):
                             key, self.user_settings_profile[key]
                         ),
                     )
-                    new_widget.string_signal.connect(self.update_settings_profile)
+                    new_widget.string_signal.connect(self.signal_update_settings)
                 case EncodeType.LIST:
                     self.form_layout.addRow(
                         key,
@@ -356,7 +357,10 @@ class SettingsWindow(QWidget):
                             key, self.user_settings_profile[key]
                         ),
                     )
-                    new_widget.string_signal.connect(self.update_settings_profile)
+                    new_widget.string_signal.connect(self.signal_update_settings)
+
+    def signal_update_settings(self, value_type, value):
+        self.update_settings_profile(value_type, value)
 
     def update_settings_profile(self, value_type, value):
         print(value_type, value)
@@ -365,19 +369,20 @@ class SettingsWindow(QWidget):
         if validity_state != None:
             print(validity_state)
             _ = self.error_message.showMessage(validity_state)
-            print("alkdkawda")
+            # print("alkdkawda")
             self.reset_settings_page()
             self.populate_form_layout()
             return False
 
         self.user_settings_profile[value_type] = temp_value
+        self.username_combo_box.setCurrentText(self.user_settings_profile["username"])
         print(value_type, temp_value)
         # print(self.user_settings_profile)
         # print(type(self.user_settings_profile))
 
         self.settings_changed_signal.emit(self.user_settings_profile)
         return True
-    
+
     def closeEvent(self, event):
         print("settings window closed")
         self.settings_saved_signal.emit(self.user_settings_profile)
