@@ -125,7 +125,8 @@ class TextEditor(QTextEdit):
         
     def change_highlight(self, new_highlight):
         if self.textBackgroundColor() == new_highlight:
-            self.setTextBackgroundColor(QColor())
+            #self.setTextBackgroundColor(QColor())
+            self.setTextBackgroundColor(QColor().fromRgb(255, 255, 255, 1))
         else:
             self.setTextBackgroundColor(new_highlight)
         

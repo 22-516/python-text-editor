@@ -460,7 +460,8 @@ class SettingsWindow(QWidget):
         #print(self.user_settings_profile)
         for _, key in enumerate(self.user_settings_profile):
             if not key in ENCODING_TYPE:
-                return False
+                print(key, "setting does not exist")
+                continue
             widget_class = None
             
             match ENCODING_TYPE[key]:
@@ -477,7 +478,7 @@ class SettingsWindow(QWidget):
                 case EncodeType.FONT:
                     widget_class = FontWidget
                 case _:
-                    print("setting exists but does not have a widget")
+                    print(key, "setting exists but does not have a widget")
                     continue
                 
             self.form_layout.addRow(key,
