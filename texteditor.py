@@ -123,6 +123,15 @@ class TextEditor(QTextEdit):
     def change_font(self, new_font : QFont):
         self.setCurrentFont(new_font)
         
+    def change_highlight(self, new_highlight):
+        if self.textBackgroundColor() == new_highlight:
+            self.setTextBackgroundColor(QColor())
+        else:
+            self.setTextBackgroundColor(new_highlight)
+        
+    def change_color(self, new_colour):
+        self.setTextColor(new_colour)
+        
     def change_font_size(self, new_font_size):
         try:
             font_size = float(new_font_size)

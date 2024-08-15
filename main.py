@@ -20,7 +20,7 @@ from PyQt6.QtWidgets import (
     QToolBar,
     QMessageBox,
     QApplication,
-    QComboBox
+    QComboBox,
 )
 
 from guilib import *  # FileContainer, TabCloseDialog
@@ -30,19 +30,20 @@ from historycontroller import *
 from filescontroller import *
 from profilesmanager import *
 
+
 class MainWindow(QMainWindow):
     """The main window of the text editor."""
 
     def __init__(self):
         super().__init__()
-        
+
         # initalise editor
         self.current_editor = TextEditor()
         self.home_window = None
         self.settings_window = None
-        
+
         self.user_settings_profile = get_current_user_profile()
-        
+
         # initalise actions and objects
         self.new_page_action = QAction("&New Page", self)
         # self.button_action.setToolTip("tooltip")
@@ -62,7 +63,7 @@ class MainWindow(QMainWindow):
 
         self.home_page_action = QAction("&Home", self)
         self.home_page_action.triggered.connect(self.open_home_page)
-        
+
         self.settings_action = QAction("&Settings", self)
         self.settings_action.triggered.connect(self.open_settings_page)
 
@@ -92,19 +93,61 @@ class MainWindow(QMainWindow):
             QIcon(os.path.join("images", "icons", "edit-italic.png"))
         )
         self.text_italic_action.setShortcut(QKeySequence("Ctrl+I"))
+
+        self.font_size_increase_action = QAction("&+", self)
+        self.font_size_increase_action.triggered.connect(self.increase_font_size)
+        self.font_size_increase_action.setCheckable(False)
+        self.font_size_increase_action.setText("+")
+
+        self.font_size_decrease_action = QAction("&-", self)
+        self.font_size_decrease_action.triggered.connect(self.decrease_font_size)
+        self.font_size_decrease_action.setCheckable(False)
+        self.font_size_decrease_action.setText("-")
         
+        self.text_colour_change_action = QAction("&Text Colour", self)
+        self.text_colour_change_action.setCheckable(False)
+        self.text_colour_change_action.triggered.connect(self.format_text_colour)
+        self.text_colour_change_action.setIcon(
+            QIcon(os.path.join("images", "icons", "edit-color.png"))
+        )
+        
+        self.text_colour_selection_action = QAction("&Text Colour Selection", self)
+        self.text_colour_selection_action.setCheckable(False)
+        self.text_colour_selection_action.triggered.connect(self.change_text_colour)
+        self.text_colour_selection_action.setIcon(
+            QIcon(os.path.join("images", "icons", "color.png"))
+        )
+        
+        self.highlight_colour_change_action = QAction("&Highlight Colour", self)
+        self.highlight_colour_change_action.setCheckable(False)
+        self.highlight_colour_change_action.triggered.connect(self.format_highlight_colour)
+        self.highlight_colour_change_action.setIcon(
+            QIcon(os.path.join("images", "icons", "highlighter-color.png"))
+        )
+        
+        self.highlight_colour_selection_action = QAction("&Highlight Colour Selection", self)
+        self.highlight_colour_selection_action.setCheckable(False)
+        self.highlight_colour_selection_action.triggered.connect(self.change_highlight_colour)
+        self.highlight_colour_selection_action.setIcon(
+            QIcon(os.path.join("images", "icons", "color.png"))
+        )
+
         # objects
         self.font_combo_box_widget = QFontComboBox(self)
         self.font_combo_box_widget.setEditable(False)
         self.font_combo_box_widget.currentFontChanged.connect(self.format_text_font)
         # set to latin for inital testing with english fonts
         self.font_combo_box_widget.setWritingSystem(QFontDatabase.WritingSystem.Latin)
-        
+
         self.font_size_combo_box_widget = QComboBox(self)
         self.font_size_combo_box_widget.setEditable(True)
         self.font_size_combo_box_widget.setDuplicatesEnabled(False)
-        self.font_size_combo_box_widget.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
-        self.font_size_combo_box_widget.textActivated.connect(self.format_text_font_size)
+        self.font_size_combo_box_widget.setSizeAdjustPolicy(
+            QComboBox.SizeAdjustPolicy.AdjustToContents
+        )
+        self.font_size_combo_box_widget.textActivated.connect(
+            self.format_text_font_size
+        )
         # self.font_size_combo_box_widget.addItems(FONT_SIZES)
 
         # initalise tabs
@@ -145,9 +188,19 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(self.text_italic_action)
         self.toolbar.addWidget(self.font_combo_box_widget)
         self.toolbar.addWidget(self.font_size_combo_box_widget)
+        self.toolbar.addAction(self.font_size_increase_action)
+        self.toolbar.addAction(self.font_size_decrease_action)
+        self.toolbar.addAction(self.text_colour_change_action)
+        self.toolbar.addAction(self.text_colour_selection_action)
+        self.toolbar.addAction(self.highlight_colour_change_action)
+        self.toolbar.addAction(self.highlight_colour_selection_action)
 
         # personalisation
         self.default_editor_palette = self.current_editor.palette()
+        self.text_colour = QColor()
+        self.text_colour_dialog = None
+        self.highlight_colour = QColor().fromRgb(255,255,0)
+        self.highlight_colour_dialog = None
 
         create_file_directories()
         self.setWindowTitle("Editor")
@@ -176,10 +229,6 @@ class MainWindow(QMainWindow):
         self.current_editor.currentCharFormatChanged.connect(
             self.on_editor_selection_change
         )
-        self.current_editor.document().modificationChanged.connect(
-            self.update_current_tab_name
-        )
-        self.update_editor_from_settings()
 
     def open_file(self, selected_file=""):
         print(
@@ -289,40 +338,44 @@ class MainWindow(QMainWindow):
                 else self.current_editor.file_name
             ),
         )
-        
+
     def update_editor_from_settings(self):
         # update editor colour editor_color
         temp_editor_viewport = self.current_editor.viewport()
         temp_editor_palette = temp_editor_viewport.palette()
         temp_colour = self.user_settings_profile["editor_colour"]
         if temp_colour:
-            temp_editor_palette.setColor(temp_editor_viewport.backgroundRole(), QColor.fromRgb(*temp_colour))
+            temp_editor_palette.setColor(
+                temp_editor_viewport.backgroundRole(), QColor.fromRgb(*temp_colour)
+            )
         else:
-            #temp_editor_palette= self.current_editor.style().standardPalette()
-            temp_editor_palette= self.default_editor_palette
+            # temp_editor_palette= self.current_editor.style().standardPalette()
+            temp_editor_palette = self.default_editor_palette
         temp_editor_viewport.setPalette(temp_editor_palette)
-        
+
         # update font size collection
         self.font_size_combo_box_widget.clear()
         if not (font_collection := self.user_settings_profile["font_size_collection"]):
             font_collection = DEFAULT_FONT_SIZE_COLLECTION
         for index, font_size_value in enumerate(font_collection):
             self.font_size_combo_box_widget.insertItem(index, str(font_size_value))
-        
+
         # update default font and font size
-        temp_font = self.user_settings_profile["default_font"] or QFont(DEFAULT_FONT_FAMILY)
-        temp_font.setPointSizeF(self.user_settings_profile["default_font_size"] or DEFAULT_FONT_SIZE)
+        temp_font = self.user_settings_profile["default_font"] or QFont(
+            DEFAULT_FONT_FAMILY
+        )
+        temp_font.setPointSizeF(
+            self.user_settings_profile["default_font_size"] or DEFAULT_FONT_SIZE
+        )
         self.current_editor.document().setDefaultFont(temp_font)
-        
-        
+
         # prompt editor to show new formatting changes
         self.on_editor_selection_change()
-        
+
         # default editor formatting
-        #default_font = QFont()
-        
-        #for index in reversed(range(self.font_size_combo_box_widget.count())):
-            
+        # default_font = QFont()
+
+        # for index in reversed(range(self.font_size_combo_box_widget.count())):
 
     #   signals
     def on_editor_selection_change(
@@ -335,17 +388,19 @@ class MainWindow(QMainWindow):
             self.text_bold_action.setChecked(self.current_editor.font_bold())
             self.text_underline_action.setChecked(self.current_editor.fontUnderline())
             self.text_italic_action.setChecked(self.current_editor.fontItalic())
-            
+
             with QSignalBlocker(self.font_combo_box_widget):
                 # block font combobox signal to prevent loop where upon selection change,
                 # the font combobox changes font which changes font of selected text
                 self.font_combo_box_widget.setCurrentFont(
                     self.current_editor.currentFont()
                 )
-                
+
             with QSignalBlocker(self.font_size_combo_box_widget):
                 # just to be safe
-                self.font_size_combo_box_widget.setCurrentText(self.current_editor.font_size())
+                self.font_size_combo_box_widget.setCurrentText(
+                    self.current_editor.font_size()
+                )
 
     def on_tab_change(self):
         self.current_editor = self.tabs.currentWidget()
@@ -401,11 +456,11 @@ class MainWindow(QMainWindow):
                 event.ignore()
                 return
         event.accept()
-        
+
     def settings_updated_slot(self, temp_settings_profile):
         self.user_settings_profile = temp_settings_profile
         self.update_editor_from_settings()
-        
+
     def save_settings_slot(self, temp_settings_profile):
         self.user_settings_profile = temp_settings_profile
         save_settings_profile_to_db(self.user_settings_profile)
@@ -425,6 +480,30 @@ class MainWindow(QMainWindow):
             color="white",
         )
         self.current_editor.InsertImage()
+        
+    def change_text_colour(self):
+        self.text_colour_dialog = QColorDialog()
+        self.text_colour_dialog.setCurrentColor(self.text_colour)
+        def set_color(colour):
+            self.text_colour = QColor(colour)
+            print(self.text_colour)
+            self.format_text_colour()
+        
+        self.text_colour_dialog.currentColorChanged.connect(set_color)
+        
+        self.text_colour_dialog.show()
+        
+    def change_highlight_colour(self):
+        self.highlight_colour_dialog = QColorDialog()
+        self.highlight_colour_dialog.setCurrentColor(self.highlight_colour)
+        def set_color(colour):
+            self.highlight_colour = QColor(colour)
+            print(self.highlight_colour)
+            self.format_highlight_colour()
+        
+        self.highlight_colour_dialog.currentColorChanged.connect(set_color)
+        
+        self.highlight_colour_dialog.show()
 
     def open_home_page(self):
         self.home_window = HomeWindow()
@@ -438,15 +517,15 @@ class MainWindow(QMainWindow):
             )  # so the buttons have functionality
 
         self.home_window.show()
-        
+
     def open_settings_page(self):
         self.settings_window = SettingsWindow(get_current_and_username_columns())
-        
-        #self.settings_window.settings_changed_signal.connect
+
+        # self.settings_window.settings_changed_signal.connect
         self.settings_window.settings_changed_signal.connect(self.settings_updated_slot)
         self.settings_window.settings_saved_signal.connect(self.save_settings_slot)
         self.settings_window.settings_deleted_signal.connect(delete_profile)
-        
+
         self.settings_window.show()
 
     # text formatting actions
@@ -462,12 +541,35 @@ class MainWindow(QMainWindow):
     def format_text_font(self, new_font):
         self.current_editor.setFocus()
         self.current_editor.change_font(new_font)
-        
+
     def format_text_font_size(self, new_size):
         self.current_editor.setFocus()
         self.current_editor.change_font_size(new_size)
+        
+    def increase_font_size(self):
+        temp_font_size = (
+            f"{float(self.font_size_combo_box_widget.currentText()) + 0.5:g}"
+        )
+        self.font_size_combo_box_widget.setCurrentText(temp_font_size)
+        self.format_text_font_size(temp_font_size)
+
+    def decrease_font_size(self):
+        temp_font_size = (
+            f"{float(self.font_size_combo_box_widget.currentText()) - 0.5:g}"
+        )
+        self.font_size_combo_box_widget.setCurrentText(temp_font_size)
+        self.format_text_font_size(temp_font_size)
+        
+    def format_text_colour(self):
+        self.current_editor.change_color(self.text_colour)
+        
+    def format_highlight_colour(self):
+        self.current_editor.change_highlight(self.highlight_colour)
+    
+
 
 if __name__ == "__main__":
+    
     app = QApplication(sys.argv)
 
     window = MainWindow()
