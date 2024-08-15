@@ -370,6 +370,14 @@ class SettingsWindow(QWidget):
         self.settings_saved_signal.emit(self.user_settings_profile)
         self.reset_settings_page()
         self.populate_form_layout()
+        
+    def rename_profile(self, old_name, new_name):
+        self.username_combo_box.setCurrentText(new_name)
+        
+        for index in range(self.username_combo_box.count()):
+            if self.username_combo_box.itemText(index) == old_name:
+                self.username_combo_box.setItemText(index, new_name)
+        self.username_combo_box.setCurrentText(new_name)
 
     def reset_settings_page(self):
         for i in reversed(range(self.form_layout.count())): 
@@ -433,8 +441,6 @@ class SettingsWindow(QWidget):
         print(validity_state, temp_value)
         if validity_state is not None:
             print(validity_state)
-            # self.reset_settings_page()
-            # self.populate_form_layout()
             self.error_message.showMessage(validity_state)
             # print("alkdkawda")
             
@@ -443,7 +449,9 @@ class SettingsWindow(QWidget):
             return False
 
         self.user_settings_profile[value_type] = temp_value
-        self.username_combo_box.setCurrentText(self.user_settings_profile["username"])
+        
+        self.rename_profile(self.username_combo_box.currentText(), self.user_settings_profile["username"])
+        # self.username_combo_box.setCurrentText(self.user_settings_profile["username"])
         # print(value_type, temp_value)
         # print(self.user_settings_profile)
         # print(type(self.user_settings_profile))
