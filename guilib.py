@@ -131,9 +131,14 @@ class StringListWidget(QWidget):
         self.horizontal_layout = QHBoxLayout(self)
 
         self.list_widget = QListWidget()
-        self.list_widget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-
+        
         self.vertical_layout = QVBoxLayout()
+        
+        self.list_widget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        # self.list_widget.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
+        # self.list_widget.setDragEnabled(True)
+        # self.list_widget.setDropIndicatorShown(True)
+        # self.list_widget.setDefaultDropAction(Qt.DropAction.MoveAction)
 
         self.move_up_button = QPushButton(QIcon(os.path.join("images", "icons", "arrow-up.png")), "Move Up")
         self.move_up_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
@@ -303,7 +308,7 @@ class SettingsWindow(QWidget):
             # print("AAAAAAAAAAAAAAAAAAAAAAAAAAAA")
             current_profile_username = "Default"
             self.username_combo_box.addItem(current_profile_username)
-            self.user_settings_profile["username"] = current_profile_username
+            #self.user_settings_profile["username"] = current_profile_username
         # set index to current username
 
         if current_profile_username:
@@ -311,7 +316,7 @@ class SettingsWindow(QWidget):
         else:
             self.username_combo_box.setCurrentIndex(0)
 
-        self.user_settings_profile = UserSettingsProfile(current_profile_username)
+        #self.user_settings_profile = UserSettingsProfile(current_profile_username)
 
         self.username_combo_box.activated.connect(self.profile_changed)
         self.profile_title_label = QLabel("Currently Editing Profile:")
@@ -331,7 +336,15 @@ class SettingsWindow(QWidget):
 
         self.vertical_layout.addLayout(self.form_layout)
         self.setLayout(self.vertical_layout)
-
+        
+        self.load_profile(current_profile_username)
+        
+    def load_profile(self, username):
+        self.user_settings_profile = UserSettingsProfile(username)
+        self.user_settings_profile["username"] = username
+        self.reset_settings_page()
+        self.populate_form_layout()
+            
     def profile_changed(self, row_int):
         # check if new username is valid
         success = self.update_settings_profile("username", current_username := self.username_combo_box.currentText())
@@ -339,10 +352,7 @@ class SettingsWindow(QWidget):
             self.username_combo_box.removeItem(row_int)
             self.username_combo_box.setCurrentText(self.user_settings_profile["username"])
         else:
-            self.user_settings_profile = UserSettingsProfile(current_username)
-            self.user_settings_profile["username"] = current_username
-            self.reset_settings_page()
-            self.populate_form_layout()
+            self.load_profile(current_username)
 
     def delete_profile(self):
         self.settings_deleted_signal.emit(self.user_settings_profile["username"])
