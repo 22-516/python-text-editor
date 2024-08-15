@@ -342,6 +342,7 @@ class SettingsWindow(QWidget):
     def change_profile(self, username):
         self.user_settings_profile = UserSettingsProfile(username)
         self.user_settings_profile["username"] = username
+        self.settings_saved_signal.emit(self.user_settings_profile)
     
     def load_profile(self, username):
         self.change_profile(username)
@@ -393,7 +394,7 @@ class SettingsWindow(QWidget):
             self.form_layout.itemAt(i).widget().setParent(None)
 
     def populate_form_layout(self):
-        print(self.user_settings_profile)
+        #print(self.user_settings_profile)
         for _, key in enumerate(self.user_settings_profile):
             if not key in ENCODING_TYPE:
                 return False
