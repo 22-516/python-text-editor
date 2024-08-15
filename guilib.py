@@ -7,7 +7,6 @@ from usersettingsprofile import UserSettingsProfile
 from encodedtypes import ENCODING_TYPE, EncodeType, DEFAULT_FONT_SIZE_COLLECTION, DEFAULT_FONT_SIZE
 from encodingcontroller import check_type_validity
 
-
 class FileContainer(QWidget):
     def __init__(self, file_path=""):
         super().__init__()
@@ -102,7 +101,7 @@ class HomeWindow(QTabWidget):
 #         self.setLayout(self.vertical_layout)
 
 class StringWidget(QLineEdit):
-    string_signal = pyqtSignal(str, str)
+    values_changed_signal = pyqtSignal(str, str)
     def __init__(self, value_type, string_value : str):
         super().__init__()
         self.value_type = value_type
@@ -114,7 +113,7 @@ class StringWidget(QLineEdit):
         
     def editing_finished(self):
         print(self.text())
-        self.string_signal.emit(self.value_type, self.text())
+        self.values_changed_signal.emit(self.value_type, self.text())
 
 class HashStringWidget(StringWidget):
     def __init__(self, value_type, string_value : str):
@@ -122,7 +121,7 @@ class HashStringWidget(StringWidget):
         super().setEchoMode(QLineEdit.EchoMode.Password)
 
 class StringListWidget(QWidget):
-    string_signal = pyqtSignal(str, list)
+    values_changed_signal = pyqtSignal(str, list)
     def __init__(self, value_type, input_list):
         super().__init__()
         self.value_type = value_type
@@ -217,10 +216,10 @@ class StringListWidget(QWidget):
             self.send_list_signal()
 
     def send_list_signal(self):
-        self.string_signal.emit(self.value_type, self.get_list_items_as_list())
+        self.values_changed_signal.emit(self.value_type, self.get_list_items_as_list())
 
 class NumberWidget(QDoubleSpinBox):
-    number_signal = pyqtSignal(str, float)
+    values_changed_signal = pyqtSignal(str, float)
     def __init__(self, value_type, number_value : float):
         super().__init__()
         self.value_type = value_type
@@ -237,11 +236,11 @@ class NumberWidget(QDoubleSpinBox):
         
     def editing_finished(self):
         print(self.value())
-        self.number_signal.emit(self.value_type, self.value())
+        self.values_changed_signal.emit(self.value_type, self.value())
 
 
 class ColourButtonWidget(QFrame):
-    colour_signal = pyqtSignal(str, tuple)
+    values_changed_signal = pyqtSignal(str, tuple)
     def __init__(self, value_type, rgb_value: tuple):
         if not rgb_value:
             rgb_value = (0, 0, 0)
@@ -263,7 +262,7 @@ class ColourButtonWidget(QFrame):
         else:
             self.new_palette.setColor(QPalette.ColorRole.Window, QColor().fromRgb(*rgb_value))
         self.setPalette(self.new_palette)
-        self.colour_signal.emit(self.value_type, rgb_value if rgb_value is not None else tuple())
+        self.values_changed_signal.emit(self.value_type, rgb_value if rgb_value is not None else tuple())
 
     # overwrite mouse press event to open colour dialog
     def mousePressEvent(self, mouse_event: QMouseEvent):
@@ -320,7 +319,7 @@ class SettingsWindow(QWidget):
         self.user_settings_profile = None
 
         self.username_combo_box.activated.connect(self.profile_name_changed)
-        self.profile_title_label = QLabel("Currently Editing Profile:")
+        self.profile_title_label = QLabel("Select a Profile:")
 
         self.profile_delete_button = QPushButton(QIcon(os.path.join("images", "icons", "minus.png")), "Delete Profile")
         self.profile_delete_button.clicked.connect(self.delete_profile)
@@ -338,11 +337,14 @@ class SettingsWindow(QWidget):
         self.vertical_layout.addLayout(self.form_layout)
         self.setLayout(self.vertical_layout)
         
-        self.load_profile(current_profile_username)
+        self.change_profile(current_profile_username)
         
-    def load_profile(self, username):
+    def change_profile(self, username):
         self.user_settings_profile = UserSettingsProfile(username)
         self.user_settings_profile["username"] = username
+    
+    def load_profile(self, username):
+        self.change_profile(username)
         self.reset_settings_page()
         self.populate_form_layout()
             
@@ -372,12 +374,19 @@ class SettingsWindow(QWidget):
         self.populate_form_layout()
         
     def rename_profile(self, old_name, new_name):
+        if old_name == new_name:
+            # unneeded renaming
+            return
+        
         self.username_combo_box.setCurrentText(new_name)
         
         for index in range(self.username_combo_box.count()):
             if self.username_combo_box.itemText(index) == old_name:
                 self.username_combo_box.setItemText(index, new_name)
         self.username_combo_box.setCurrentText(new_name)
+        # save settings to db (so when user clicks on the username in the combobox,
+        # the saved settings are shown (otherwise erases progress))
+        self.settings_saved_signal.emit(self.user_settings_profile)
 
     def reset_settings_page(self):
         for i in reversed(range(self.form_layout.count())): 
@@ -388,47 +397,69 @@ class SettingsWindow(QWidget):
         for _, key in enumerate(self.user_settings_profile):
             if not key in ENCODING_TYPE:
                 return False
+            widget_class = None
+            
             match ENCODING_TYPE[key]:
                 case EncodeType.HEX:
-                    self.form_layout.addRow(
-                        key,
-                        new_widget := ColourButtonWidget(
-                            key, self.user_settings_profile[key]
-                        ),
-                    )
-                    new_widget.colour_signal.connect(self.signal_update_settings)
+                    widget_class = ColourButtonWidget
                 case EncodeType.STR:
-                    self.form_layout.addRow(
-                        key,
-                        new_widget := StringWidget(
-                            key, self.user_settings_profile[key]
-                        ),
-                    )
-                    new_widget.string_signal.connect(self.signal_update_settings)
+                    widget_class = StringWidget
                 case EncodeType.HASH:
-                    self.form_layout.addRow(
-                        key,
-                        new_widget := HashStringWidget(
-                            key, self.user_settings_profile[key]
-                        ),
-                    )
-                    new_widget.string_signal.connect(self.signal_update_settings)
+                    widget_class = HashStringWidget
                 case EncodeType.LIST:
-                    self.form_layout.addRow(
-                        key,
-                        new_widget := StringListWidget(
-                            key, self.user_settings_profile[key]
-                        ),
-                    )
-                    new_widget.string_signal.connect(self.signal_update_settings)
-                case EncodeType.INT:
-                    self.form_layout.addRow(
-                        key,                        
-                        new_widget := NumberWidget(
-                            key, self.user_settings_profile[key]
-                        ),
-                    )
-                    new_widget.number_signal.connect(self.signal_update_settings)
+                    widget_class = StringListWidget
+                case _:
+                    print("setting exists but does not have a widget")
+                    continue
+                
+            self.form_layout.addRow(key,
+                new_widget := widget_class(
+                    key, self.user_settings_profile[key]
+                ),
+            )
+            new_widget.values_changed_signal.connect(self.signal_update_settings)
+            
+            # match ENCODING_TYPE[key]:
+            #     case EncodeType.HEX:
+            #         self.form_layout.addRow(
+            #             key,
+            #             new_widget := ColourButtonWidget(
+            #                 key, self.user_settings_profile[key]
+            #             ),
+            #         )
+            #         new_widget.colour_signal.connect(self.signal_update_settings)
+            #     case EncodeType.STR:
+            #         self.form_layout.addRow(
+            #             key,
+            #             new_widget := StringWidget(
+            #                 key, self.user_settings_profile[key]
+            #             ),
+            #         )
+            #         new_widget.string_signal.connect(self.signal_update_settings)
+            #     case EncodeType.HASH:
+            #         self.form_layout.addRow(
+            #             key,
+            #             new_widget := HashStringWidget(
+            #                 key, self.user_settings_profile[key]
+            #             ),
+            #         )
+            #         new_widget.string_signal.connect(self.signal_update_settings)
+            #     case EncodeType.LIST:
+            #         self.form_layout.addRow(
+            #             key,
+            #             new_widget := StringListWidget(
+            #                 key, self.user_settings_profile[key]
+            #             ),
+            #         )
+            #         new_widget.string_signal.connect(self.signal_update_settings)
+            #     case EncodeType.INT:
+            #         self.form_layout.addRow(
+            #             key,                        
+            #             new_widget := NumberWidget(
+            #                 key, self.user_settings_profile[key]
+            #             ),
+            #         )
+            #         new_widget.number_signal.connect(self.signal_update_settings)
 
     def signal_update_settings(self, value_type, value):
         self.update_settings_profile(value_type, value)

@@ -63,13 +63,13 @@ def check_type_validity(value_type, input_value):
                 if not font_size.replace(".", "", 1).isdigit():
                     error_message = "Only numbers are allowed to be used!"
                 else:
-                    if not float(font_size) > 0:
+                    if not float(font_size) >= 0:
                         error_message = "Only positive numbers are allowed to be used!"
         case EncodeType.INT:
             if not str(input_value).replace(".", "", 1).isdigit():
                 error_message = "Only numbers are allowed to be used!"
             else:
-                if not float(input_value) > 0:
+                if not float(input_value) >= 0:
                     error_message = "Only positive numbers are allowed to be used!"
 
     return error_message, input_value
