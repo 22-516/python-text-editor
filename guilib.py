@@ -118,7 +118,53 @@ class StringWidget(QLineEdit):
 class HashStringWidget(StringWidget):
     def __init__(self, value_type, string_value : str):
         super().__init__(value_type, None)
+        super().setPlaceholderText("Enter Password")
         super().setEchoMode(QLineEdit.EchoMode.Password)
+
+class PasswordDialog(QDialog):
+    def __init__(self, correct_password : str):
+        super().__init__()
+        self.correct_password = correct_password
+        
+        self.vertical_layout = QVBoxLayout()
+        self.horizontal_layout = QHBoxLayout()
+        
+        self.error_label = QLabel()
+        self.error_timer = None
+        
+        self.name_label = QLabel()
+        self.name_label.setText("Enter the password to edit this profile:")
+        
+        self.password_widget = HashStringWidget("password", None)
+        self.password_widget.values_changed_signal.connect(self.password_entered)
+        
+        self.vertical_layout.addWidget(self.error_label)
+        self.vertical_layout.addWidget(self.name_label)
+        
+        self.horizontal_layout.addWidget(self.password_widget)
+        self.vertical_layout.addLayout(self.horizontal_layout)
+        self.setLayout(self.vertical_layout)
+        
+    def flash_error_label(self):
+        if self.error_label.text() is not None and self.error_label.text() != "":
+            self.error_label.setText("")
+        else:
+            self.error_label.setText("The password you have entered is not correct.")
+            
+    
+    def password_entered(self, _, password):
+        if password == self.correct_password:
+            print("password correct")
+            self.accept()
+        else:
+            self.flash_error_label()
+            #self.error_label.setText("The password you have entered is not correct.")
+            
+            self.error_timer = QTimer()
+            self.error_timer.timeout.connect(self.flash_error_label)
+            self.error_timer.start(1000)
+            #self.error_dialog = QErrorMessage()
+            #self.error_dialog.showMessage("The password you have entered is not correct.")
 
 class StringListWidget(QWidget):
     values_changed_signal = pyqtSignal(str, list)
@@ -280,12 +326,12 @@ class ColourButtonWidget(QFrame):
     # overwrite mouse press event to open colour dialog
     def mousePressEvent(self, mouse_event: QMouseEvent):
         if mouse_event.button() == Qt.MouseButton.LeftButton:
-            print("left")
+            # print("left")
             self.colour_dialog.setCurrentColor(QColor().fromRgb(*self.new_palette.color(QPalette.ColorRole.Window).getRgb()))
             self.colour_dialog.currentColorChanged.connect(lambda color: self.set_colour(color.getRgb()))
             self.colour_dialog.show()
         elif mouse_event.button() == Qt.MouseButton.RightButton:
-            print("right")
+            # print("right")
             self.set_colour(None)
 
         # self.colour_button_clicked_signal.emit(self.new_palette, self.new_palette.color(QPalette.ColorRole.Window).getRgb())
@@ -299,6 +345,9 @@ class SettingsWindow(QWidget):
         super().__init__()
 
         self.setWindowTitle("Settings")
+        
+        self.password_entered = False
+        self.password_widget = None
 
         self.vertical_layout = QVBoxLayout(self)
         self.combo_box_horizontal_layout = QHBoxLayout()
@@ -353,6 +402,7 @@ class SettingsWindow(QWidget):
         self.change_profile(current_profile_username)
         
     def change_profile(self, username):
+        self.password_entered = False
         self.user_settings_profile = UserSettingsProfile(username)
         self.user_settings_profile["username"] = username
         self.settings_saved_signal.emit(self.user_settings_profile)
@@ -479,7 +529,24 @@ class SettingsWindow(QWidget):
             #         )
             #         new_widget.number_signal.connect(self.signal_update_settings)
 
+    def check_password(self):
+        if self.password_entered:
+            return True
+        
+        print("password not entered yet")
+        if not self.user_settings_profile["password"]:
+            print("no password set")
+            return True
+        self.password_widget = PasswordDialog(self.user_settings_profile["password"])
+        result = self.password_widget.exec()
+        if result == QDialog.DialogCode.Accepted:
+            self.password_entered = True
+            self.password_widget.setParent(None)
+        
+
     def signal_update_settings(self, value_type, value):
+        if not self.check_password():
+            return
         self.update_settings_profile(value_type, value)
         # prevents issues with crashing when updating settings (with return into a PyQt signal)
         # ( may not be the root cause, but is a good change regardless )
