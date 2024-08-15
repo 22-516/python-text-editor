@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import *
 
 from historycontroller import *
 from usersettingsprofile import UserSettingsProfile
-from encodedtypes import ENCODING_TYPE, EncodeType, DEFAULT_FONT_SIZE_COLLECTION
+from encodedtypes import ENCODING_TYPE, EncodeType, DEFAULT_FONT_SIZE_COLLECTION, DEFAULT_FONT_SIZE
 from encodingcontroller import check_type_validity
 
 
@@ -126,7 +126,7 @@ class StringListWidget(QWidget):
     def __init__(self, value_type, input_list):
         super().__init__()
         self.value_type = value_type
-        self.integers = []
+        #self.inital_numbers_list = []
 
         self.horizontal_layout = QHBoxLayout(self)
 
@@ -135,14 +135,19 @@ class StringListWidget(QWidget):
 
         self.vertical_layout = QVBoxLayout()
 
-        self.move_up_button = QPushButton()
+        self.move_up_button = QPushButton(QIcon(os.path.join("images", "icons", "arrow-up.png")), "Move Up")
         self.move_up_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-        self.move_down_button = QPushButton()
+        self.move_down_button = QPushButton(QIcon(os.path.join("images", "icons", "arrow-down.png")), "Move Down")
         self.move_down_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-        self.new_item_button = QPushButton()
+        self.new_item_button = QPushButton(QIcon(os.path.join("images", "icons", "plus.png")), "New Item")
         self.new_item_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-        self.remove_item_button = QPushButton()
+        self.remove_item_button = QPushButton(QIcon(os.path.join("images", "icons", "minus.png")), "Remove Item")
         self.remove_item_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.move_up_button.clicked.connect(self.move_list_item_up)
+        self.move_down_button.clicked.connect(self.move_list_item_down)
+        self.new_item_button.clicked.connect(self.add_list_item)
+        self.remove_item_button.clicked.connect(self.remove_list_item)
 
         self.vertical_layout.addWidget(self.move_up_button)
         self.vertical_layout.addWidget(self.move_down_button)
@@ -156,7 +161,7 @@ class StringListWidget(QWidget):
             input_list = DEFAULT_FONT_SIZE_COLLECTION
         for _, value in enumerate(input_list):
             item = QListWidgetItem()
-            self.integers.append(item)
+            #self.inital_numbers_list.append(item)
             item.setText(str(value))
             self.list_widget.addItem(item)
             self.list_widget.openPersistentEditor(item)
@@ -174,8 +179,61 @@ class StringListWidget(QWidget):
         print(temp_list)
         return temp_list
 
+    def move_list_item_up(self):
+        current_index = self.list_widget.currentRow()
+        if current_index > 0:
+            item = self.list_widget.takeItem(current_index)
+            self.list_widget.insertItem(current_index - 1, item)
+            self.list_widget.setCurrentRow(current_index - 1)
+            self.send_list_signal()
+
+    def move_list_item_down(self):
+        current_index = self.list_widget.currentRow()
+        if current_index < self.list_widget.count() - 1:
+            item = self.list_widget.takeItem(current_index)
+            self.list_widget.insertItem(current_index + 1, item)
+            self.list_widget.setCurrentRow(current_index + 1)
+            self.send_list_signal()
+
+    def add_list_item(self):
+        new_item = QListWidgetItem()
+        new_item.setText(str(0))
+        # self.integers.append(new_item)
+        self.list_widget.addItem(new_item)
+        self.list_widget.openPersistentEditor(new_item)
+        self.list_widget.setCurrentItem(new_item)
+        self.send_list_signal()
+
+    def remove_list_item(self):
+        current_index = self.list_widget.currentRow()
+        if current_index >= 0:
+            self.list_widget.takeItem(current_index)
+            # self.integers.remove(current_index)
+            self.send_list_signal()
+
     def send_list_signal(self):
         self.string_signal.emit(self.value_type, self.get_list_items_as_list())
+
+class NumberWidget(QDoubleSpinBox):
+    number_signal = pyqtSignal(str, float)
+    def __init__(self, value_type, number_value : float):
+        super().__init__()
+        self.value_type = value_type
+        
+        if not number_value:
+            number_value = DEFAULT_FONT_SIZE
+        
+        self.setMinimum(0)
+        self.setMaximum(8192)
+        self.setSingleStep(0.5)
+        self.setValue(number_value)
+        
+        self.valueChanged.connect(self.editing_finished)
+        
+    def editing_finished(self):
+        print(self.value())
+        self.number_signal.emit(self.value_type, self.value())
+
 
 class ColourButtonWidget(QFrame):
     colour_signal = pyqtSignal(str, tuple)
@@ -225,8 +283,6 @@ class SettingsWindow(QWidget):
 
         self.setWindowTitle("Settings")
 
-        # self.user_settings_profile = current_user_settings_profile
-        # self.frame = QFrame(self)
         self.vertical_layout = QVBoxLayout(self)
         self.combo_box_horizontal_layout = QHBoxLayout()
 
@@ -235,7 +291,6 @@ class SettingsWindow(QWidget):
         self.username_combo_box.setEditable(True)
         self.username_combo_box.setDuplicatesEnabled(False)
         self.username_combo_box.setInsertPolicy(QComboBox.InsertPolicy.InsertAfterCurrent)
-        # self.username_combo_box.setPlaceholderText("Select or type to create a profile")
         current_profile_username = None
         # if the database contains user data
         if all_profiles:
@@ -258,12 +313,7 @@ class SettingsWindow(QWidget):
 
         self.user_settings_profile = UserSettingsProfile(current_profile_username)
 
-        # self.username_combo_box.insert
-
         self.username_combo_box.activated.connect(self.profile_changed)
-
-        # self.username_combo_box.editTextChanged.connect(lambda x:print(x))
-
         self.profile_title_label = QLabel("Currently Editing Profile:")
 
         self.profile_delete_button = QPushButton(QIcon(os.path.join("images", "icons", "minus.png")), "Delete Profile")
@@ -279,12 +329,6 @@ class SettingsWindow(QWidget):
 
         self.error_message = QErrorMessage(self)
 
-        # self.populate_form_layout()
-
-        # self.form_layout.addRow("Colour", ColourButtonWidget(user_settings_profile))
-        # self.form_layout.addRow("Colou2r", ColourButtonWidget(user_settings_profile))
-
-        # self.setLayout(self.form_layout)
         self.vertical_layout.addLayout(self.form_layout)
         self.setLayout(self.vertical_layout)
 
@@ -358,9 +402,19 @@ class SettingsWindow(QWidget):
                         ),
                     )
                     new_widget.string_signal.connect(self.signal_update_settings)
+                case EncodeType.INT:
+                    self.form_layout.addRow(
+                        key,                        
+                        new_widget := NumberWidget(
+                            key, self.user_settings_profile[key]
+                        ),
+                    )
+                    new_widget.number_signal.connect(self.signal_update_settings)
 
     def signal_update_settings(self, value_type, value):
         self.update_settings_profile(value_type, value)
+        # prevents issues with crashing when updating settings (with return into a PyQt signal)
+        # ( may not be the root cause, but is a good change regardless )
 
     def update_settings_profile(self, value_type, value):
         print(value_type, value)
@@ -376,7 +430,7 @@ class SettingsWindow(QWidget):
 
         self.user_settings_profile[value_type] = temp_value
         self.username_combo_box.setCurrentText(self.user_settings_profile["username"])
-        print(value_type, temp_value)
+        # print(value_type, temp_value)
         # print(self.user_settings_profile)
         # print(type(self.user_settings_profile))
 
