@@ -238,6 +238,19 @@ class NumberWidget(QDoubleSpinBox):
         print(self.value())
         self.values_changed_signal.emit(self.value_type, self.value())
 
+class FontWidget(QFontComboBox):
+    values_changed_signal = pyqtSignal(str, QFont)
+    def __init__(self, value_type, font : QFont):
+        super().__init__()
+        self.value_type = value_type
+        
+        self.setEditable(False)
+        # set to latin for english fonts
+        self.setWritingSystem(QFontDatabase.WritingSystem.Latin)
+        self.currentFontChanged.connect(self.font_selected)
+    
+    def font_selected(self, new_font):
+        self.values_changed_signal.emit(self.value_type, new_font)
 
 class ColourButtonWidget(QFrame):
     values_changed_signal = pyqtSignal(str, tuple)
@@ -409,6 +422,10 @@ class SettingsWindow(QWidget):
                     widget_class = HashStringWidget
                 case EncodeType.LIST:
                     widget_class = StringListWidget
+                case EncodeType.INT:
+                    widget_class = NumberWidget
+                case EncodeType.FONT:
+                    widget_class = FontWidget
                 case _:
                     print("setting exists but does not have a widget")
                     continue

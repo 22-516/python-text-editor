@@ -99,6 +99,13 @@ class TextEditor(QTextEdit):
     def font_bold(self):
         font_weight = self.fontWeight()
         return font_weight == QFont.Weight.Bold
+    
+    def font_size(self):
+        # font_size = str(self.fontPointSize()).split('.', maxsplit=1)[0]
+        # print(font_size)
+        font_size = f"{self.currentFont().pointSizeF():g}"
+        #print(font_size)
+        return font_size
 
     def toggle_selected_bold(self):
         #self.setFontWeight(new_font_weight := QFont.Weight.Bold if self.fontWeight() == QFont.Weight.Normal else QFont.Weight.Normal)
@@ -115,3 +122,10 @@ class TextEditor(QTextEdit):
     
     def change_font(self, new_font : QFont):
         self.setCurrentFont(new_font)
+        
+    def change_font_size(self, new_font_size):
+        try:
+            font_size = float(new_font_size)
+        except ValueError: # if cant be converted to float (empty string)
+            return
+        self.setFontPointSize(font_size)

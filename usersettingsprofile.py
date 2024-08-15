@@ -35,8 +35,9 @@ class UserSettingsProfile:
         # if key in ENCODING_TYPE:
         #     print(key, "needs to be decoded", self.user_data[key]) #test
         #     return decode_from_db_value(key, self.user_data[key])
-        
-        return self.user_data[key]
+        return self.user_data.__getitem__(key)
+
+        #return self.user_data[key]
 
     def __setitem__(self, key, value):
         self.user_data[key] = value

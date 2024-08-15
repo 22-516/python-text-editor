@@ -2,6 +2,8 @@ import hashlib
 import string
 import re
 
+from PyQt6.QtGui import QFont, QFontInfo
+
 from encodedtypes import ENCODING_TYPE, EncodeType, STRING_MAX_LENGTH, STRING_ALLOW_NUMBERS, STRING_ALLOW_SPECIAL_CHARACTERS
 
 def tuple_rgb_to_hex(r, g, b, _=None):
@@ -21,10 +23,16 @@ def list_encode_to_string(input_list : list):
         return None
     return "/".join(map(str, input_list))
 
-def sting_decode_to_list(input_string : str):
+def string_decode_to_list(input_string : str):
     if not input_string:
         return None
     return input_string.split("/")
+
+def qfont_to_string(input_font : QFont):
+    return QFontInfo(input_font).family()
+
+def string_to_qfont(input_string : str):
+    return QFont(input_string)
 
 def hash_password(password):
     return password #testing
@@ -71,6 +79,8 @@ def check_type_validity(value_type, input_value):
             else:
                 if not float(input_value) >= 0:
                     error_message = "Only positive numbers are allowed to be used!"
+        case EncodeType.HASH:
+            pass
 
     return error_message, input_value
 
@@ -82,7 +92,9 @@ def decode_from_db_value(db_column, db_value):
             case EncodeType.HEX:
                 return hex_to_tuple_rgb(db_value)
             case EncodeType.LIST:
-                return sting_decode_to_list(db_value)
+                return string_decode_to_list(db_value)
+            case EncodeType.FONT:
+                return string_to_qfont(db_value)
             case _:
                 print("no encoding", db_column, db_value)
                 return db_value
@@ -96,6 +108,8 @@ def encode_to_db_value(db_column, db_value):
                 return tuple_rgb_to_hex(*db_value)
             case EncodeType.LIST:
                 return list_encode_to_string(db_value)
+            case EncodeType.FONT:
+                return qfont_to_string(db_value)
             case _:
                 print("no encoding", db_column, db_value)
                 return db_value
