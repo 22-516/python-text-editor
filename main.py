@@ -1,5 +1,5 @@
 """This file contains the main window of the editor."""
-
+import builtins
 import sys
 from pathlib import Path
 
@@ -267,19 +267,42 @@ class MainWindow(QMainWindow):
                 return
 
         file_content = file_controller_open_file(selected_file, selected_file_extension)
-        if file_content:
-            self.add_editor_page(selected_file)
-            self.current_editor.setText(file_content)
-            self.current_editor.document().setModified(False)
-            # self.current_editor.set_file_path(selected_file)
-            prepend_recent_file_list(selected_file)
+        
+        try:
+            # print(type(file_content))
+            match type(file_content):
+                case builtins.str:
+                    self.add_editor_page(selected_file)
+                    print(file_content)
+                    self.current_editor.setText(file_content)
+                case builtins.list:
+                    self.add_editor_page(selected_file)
+                    self.current_editor.setText("")
+                    new_cursor = self.current_editor.textCursor()
+                    for format_list in file_content:
+                        new_cursor.insertText(str(format_list[0]), format_list[1])
+        except Exception as exception:
+            print("error occured during opening file", exception)
         else:
-            print(
-                "opened file does not exist or no content",
-                tag="info",
-                tag_color="blue",
-                color="white",
-            )
+            self.current_editor.document().setModified(False)
+            self.current_editor.set_file_path(selected_file)
+            prepend_recent_file_list(selected_file)
+                
+                
+        # file_content = file_controller_open_file(selected_file, selected_file_extension)
+        # if file_content:
+        #     self.add_editor_page(selected_file)
+        #     self.current_editor.setText(file_content)
+        #     self.current_editor.document().setModified(False)
+        #     # self.current_editor.set_file_path(selected_file)
+        #     prepend_recent_file_list(selected_file)
+        # else:
+        #     print(
+        #         "opened file does not exist or no content",
+        #         tag="info",
+        #         tag_color="blue",
+        #         color="white",
+        #     )
 
     def save_file(self, save_as=False):
         print(

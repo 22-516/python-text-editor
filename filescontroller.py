@@ -42,13 +42,12 @@ def file_controller_open_file(selected_file_path, selected_file_extension):
                     file_content = temp_file.read()
             case ".docx":
                 print("docx")
-                file_content = parse_docx_file_to_html(selected_file_path)
+                file_content = parse_docx_file_to_list(selected_file_path)
     except Exception as exception:
         print("file open unsuccessful", exception)
     else:
         print("file open successful")
-    finally: 
-        return file_content
+    return file_content
 
 
 def file_controller_save_file(current_editor : TextEditor, selected_save_file_path, selected_file_extension):
@@ -73,7 +72,6 @@ def file_controller_save_file(current_editor : TextEditor, selected_save_file_pa
                 print("txt")
                 with open(selected_save_file_path, "w", encoding=text_encoding) as temp_file:
                     temp_file.write(current_editor.toPlainText())
-                    current_editor.set_file_path(selected_save_file_path)
             case ".docx":
                 print("docx")
                 parsed_docx = parse_editor_document_to_docx(current_editor.document())
@@ -85,6 +83,7 @@ def file_controller_save_file(current_editor : TextEditor, selected_save_file_pa
             shutil.move(file_backup, selected_save_file_path) # replace original file with the backup of the original file
     else:
         print("save successful")
+        current_editor.set_file_path(selected_save_file_path)
         save_success_state = True
     finally: 
         try: # remove the backup
@@ -93,4 +92,4 @@ def file_controller_save_file(current_editor : TextEditor, selected_save_file_pa
         except FileNotFoundError:
             pass
         
-        return save_success_state
+    return save_success_state
