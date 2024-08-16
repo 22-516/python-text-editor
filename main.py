@@ -1,4 +1,5 @@
 """This file contains the main window of the editor."""
+
 import builtins
 import sys
 from pathlib import Path
@@ -43,11 +44,11 @@ class MainWindow(QMainWindow):
         self.home_window = None
         self.settings_window = None
 
+        # load the user settings from the current profile
         self.user_settings_profile = get_current_user_profile()
 
         # initalise actions and objects
         self.new_page_action = QAction("&New Page", self)
-        # self.button_action.setToolTip("tooltip")
         self.new_page_action.triggered.connect(self.new_page_button_pressed)
 
         self.open_file_action = QAction("&Open", self)
@@ -70,7 +71,7 @@ class MainWindow(QMainWindow):
 
         self.insert_image_action = QAction("&Insert Image", self)
         self.insert_image_action.triggered.connect(self.insert_image_button_pressed)
-        
+
         # text formatting actions
         self.text_bold_action = QAction("&Bold", self)
         self.text_bold_action.triggered.connect(self.format_text_bold)
@@ -96,7 +97,10 @@ class MainWindow(QMainWindow):
         )
         self.text_italic_action.setShortcut(QKeySequence("Ctrl+I"))
 
-        self.font_size_increase_action = QAction("&+", self)
+        self.font_size_increase_action = QAction(
+            "&+", self
+        )  # the small buttons on the side of the font size widget
+        # to increment or decrement the font size in small amounts easily
         self.font_size_increase_action.triggered.connect(self.increase_font_size)
         self.font_size_increase_action.setCheckable(False)
         self.font_size_increase_action.setText("+")
@@ -156,7 +160,6 @@ class MainWindow(QMainWindow):
         self.font_size_combo_box_widget.textActivated.connect(
             self.format_text_font_size
         )
-        # self.font_size_combo_box_widget.addItems(FONT_SIZES)
 
         # initalise tabs
         # print("initalising tabs", tag="init", tag_color="magenta", color="white")
@@ -184,16 +187,15 @@ class MainWindow(QMainWindow):
         file_menu_button.addAction(self.save_file_action)
         file_menu_button.addAction(self.save_as_file_action)
         file_menu_button.addAction(self.open_file_action)
-        
+
         insert_menu_button = self.menubar.addMenu("Insert")
         insert_menu_button.addAction(self.insert_image_action)
 
         # initalise toolbar
         self.toolbar = QToolBar("main toolbar", self)
-        # self.toolbar.setIconSize(QSize(32, 32))
         self.addToolBar(self.toolbar)
 
-        self.toolbar.addAction(self.insert_image_action)  # for image testing
+        self.toolbar.addAction(self.insert_image_action)
         self.toolbar.addAction(self.text_bold_action)
         self.toolbar.addAction(self.text_underline_action)
         self.toolbar.addAction(self.text_italic_action)
@@ -215,18 +217,14 @@ class MainWindow(QMainWindow):
 
         create_file_directories()
         self.setWindowTitle("Editor")
-        # self.setGeometry(0, 0, 800, 600)
         self.add_editor_page()
         self.update_editor_from_settings()
-
-        # self.status_bar = QStatusBar()
-        # self.setStatusBar(self.status_bar)
-        # self.status_bar.showMessage("Ready", 5000)
 
     # methods
     #       editor functionality
 
     def add_editor_page(self, file_path=""):
+        """adds a new editor into a new tab"""
         print(
             "adding new page with path metadata:",
             str(file_path) or "None",
@@ -238,11 +236,14 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.current_editor, self.current_editor.file_name)
         self.tabs.setCurrentWidget(self.current_editor)
 
+        # add a connection to currentCharFormatChanged to detect when the user selected text
+        # formatting changes, to update QAction checked status (bold button, underline, etc)
         self.current_editor.currentCharFormatChanged.connect(
             self.on_editor_selection_change
         )
 
     def open_file(self, selected_file=""):
+        """attempts to a file of the users choice into the editor"""
         print(
             "attempting to open from file", tag="info", tag_color="blue", color="white"
         )
@@ -250,14 +251,16 @@ class MainWindow(QMainWindow):
 
         if not selected_file:
             supported_file_filter = "Text File (*.txt);;Word Document (*.docx)"
-            selected_file, selected_filter = QFileDialog.getOpenFileName(
+            selected_file, _ = QFileDialog.getOpenFileName(
                 self, "Open File", "", supported_file_filter
             )
 
         selected_file_extension = os.path.splitext(selected_file)[1]
 
+        # check if the file is already open in the editor
         for tab in range(self.tabs.count()):
             if selected_file == self.tabs.widget(tab).file_path:
+                # count it as opening the file, so add to history
                 prepend_recent_file_list(selected_file)
                 print(
                     "file with path",
@@ -267,52 +270,42 @@ class MainWindow(QMainWindow):
                     tag_color="green",
                     color="white",
                 )
+                # then swap tabs to the file
                 self.tabs.setCurrentIndex(tab)
                 return
 
         file_content = file_controller_open_file(selected_file, selected_file_extension)
-        
+
         try:
-            # print(type(file_content))
             match type(file_content):
                 case builtins.str:
+                    # if the returned file_content is string, set immediately
                     self.add_editor_page(selected_file)
-                    print(file_content)
+                    # print(file_content)
                     self.current_editor.setText(file_content)
                 case builtins.list:
                     self.add_editor_page(selected_file)
                     self.current_editor.setText("")
                     new_cursor = self.current_editor.textCursor()
                     for format_list in file_content:
-                        print(format_list)
-                        if type(format_list) == str:
+                        # print(format_list)
+                        if isinstance(format_list, str):
+                            # the formatted item is a string (which is an encoded image in this context)
                             new_cursor.insertHtml(format_list)
                         else:
+                            # stored as a tuple with the text and the text formatting as two different indexes
                             new_cursor.insertText(str(format_list[0]), format_list[1])
         except Exception as exception:
             print("error occured during opening file", exception)
         else:
+            # we set the metadata again just to be double sure
             self.current_editor.document().setModified(False)
             self.current_editor.set_file_path(selected_file)
+            # prepend to history so the user can see the file from the home window
             prepend_recent_file_list(selected_file)
-                
-                
-        # file_content = file_controller_open_file(selected_file, selected_file_extension)
-        # if file_content:
-        #     self.add_editor_page(selected_file)
-        #     self.current_editor.setText(file_content)
-        #     self.current_editor.document().setModified(False)
-        #     # self.current_editor.set_file_path(selected_file)
-        #     prepend_recent_file_list(selected_file)
-        # else:
-        #     print(
-        #         "opened file does not exist or no content",
-        #         tag="info",
-        #         tag_color="blue",
-        #         color="white",
-        #     )
 
     def save_file(self, save_as=False):
+        """attempts to save the current editor to a file of the users choice"""
         print(
             "attempting to save to file, new file? :",
             save_as,
@@ -325,25 +318,32 @@ class MainWindow(QMainWindow):
         selected_file_extension = self.current_editor.file_extension
 
         if not selected_save_file_path or save_as:
+            # file filter so that only text files and word documents are shown within the file dialog
+            # ( to discourage the user from picking an unrelated file type )
             supported_file_filter = "Text File (*.txt);;Word Document (*.docx)"
             selected_save_file_path, selected_filter = QFileDialog.getSaveFileName(
                 self, "Save File", "", supported_file_filter
             )
             # grab extension from file path
             # so that the user can enter any extension without selecting the specific filter
-            print("b", selected_file_extension, selected_save_file_path)
             if (
-                selected_save_file_path # if file path is not empty
+                selected_save_file_path  # if file path is not empty
                 # and if file extension does not match (or not exist)
                 and not selected_file_extension
             ):
                 # add extension to file path if it does not exist
                 # use regex to capture between the brackets in the filter to get current file type
                 # (this is why filters are separated, for ease of use for user when they input a file name)
-                selected_file_extension = re.search(r'\((.+?)\)', selected_filter or supported_file_filter).group(1).replace('*',"")
+                selected_file_extension = (
+                    re.search(r"\((.+?)\)", selected_filter or supported_file_filter)
+                    .group(1)
+                    .replace("*", "")
+                )
                 selected_save_file_path += selected_file_extension
                 selected_save_file_path.strip()
-                print(selected_save_file_path, tag="info", tag_color="blue", color="white")
+                print(
+                    selected_save_file_path, tag="info", tag_color="blue", color="white"
+                )
 
         if file_controller_save_file(
             self.current_editor, selected_save_file_path, selected_file_extension
@@ -369,7 +369,8 @@ class MainWindow(QMainWindow):
             return False
 
     def update_current_tab_name(self, new_modification_status=None):
-        # print(new_modification_status)
+        """this method is called whenever the current_editor.document().isModified() changes
+        so when the user types something in, etc, change tab name to reflect"""
         if not new_modification_status:
             new_modification_status = self.current_editor.document().isModified()
         self.tabs.setTabText(
@@ -382,11 +383,13 @@ class MainWindow(QMainWindow):
         )
 
     def update_editor_from_settings(self):
-        # update editor background colour [editor_background_colour]
+        """update the editor with all the settings from the currently selected user profile"""
         temp_window_colour_string = self.user_settings_profile[
             "editor_background_colour"
         ]
         if temp_window_colour_string:
+            # editor colour within the UserSettingsProfile class is saved as a tuple with rgb values
+            # so we need to convert into a hex to use in the stylesheet (only accepts hex)
             temp_window_colour = tuple_rgb_to_hex(*temp_window_colour_string)
 
             self.setStyleSheet(
@@ -397,11 +400,14 @@ class MainWindow(QMainWindow):
                             """
             )
         else:
+            # this sets to the default stylesheet if there's no user selected colour
             self.setStyleSheet("")
 
         # update editor colour [editor_color]
         temp_editor_colour_string = self.user_settings_profile["editor_colour"]
         if temp_editor_colour_string:
+            # editor colour within the UserSettingsProfile class is saved as a tuple with rgb values
+            # so we need to convert into a hex to use in the stylesheet (only accepts hex)
             temp_editor_colour = tuple_rgb_to_hex(*temp_editor_colour_string)
 
             self.current_editor.setStyleSheet(
@@ -410,11 +416,14 @@ class MainWindow(QMainWindow):
                                                 """
             )
         else:
+            # this sets to the default stylesheet if there's no user selected colour
             self.current_editor.setStyleSheet("")
 
         # update font size collection (the list of sizes available) [font_size_collection]
         self.font_size_combo_box_widget.clear()
         if not (font_collection := self.user_settings_profile["font_size_collection"]):
+            # if there is no font_size_collection within the currently selected profile, use default
+            # from constants set in encode_type
             font_collection = DEFAULT_FONT_SIZE_COLLECTION
         for index, font_size_value in enumerate(font_collection):
             self.font_size_combo_box_widget.insertItem(index, str(font_size_value))
@@ -423,6 +432,7 @@ class MainWindow(QMainWindow):
         temp_font = self.user_settings_profile["default_font"] or QFont(
             DEFAULT_FONT_FAMILY
         )
+        # PointSizeF is a float value
         temp_font.setPointSizeF(
             self.user_settings_profile["default_font_size"] or DEFAULT_FONT_SIZE
         )
@@ -434,8 +444,9 @@ class MainWindow(QMainWindow):
     #   signals
     def on_editor_selection_change(
         self,
-    ):  # when the cursor selection is changed (eg if the user clicks on bolded text)
-        # check all qactions for continuity
+    ):
+        """when the cursor selection is changed (eg if the user clicks on bolded text)
+        check all qactions for continuity"""
         if (
             self.current_editor
         ):  # if the editor exists (prevents issues when tab is closed)
@@ -457,6 +468,7 @@ class MainWindow(QMainWindow):
                 )
 
     def on_tab_change(self):
+        """when a tab changes, we set the current editor to the editor within the tab we changed to"""
         self.current_editor = self.tabs.currentWidget()
         self.on_editor_selection_change()  # update text formatting qactions checked status upon
         # changing tabs to preserve continuity between tabs
@@ -469,6 +481,7 @@ class MainWindow(QMainWindow):
         )
 
     def request_tab_close(self, tab_index):
+        """when a tab is about to be closed, check for any unsaved changes before allowing the tab to be closed if the user allows it"""
         self.tabs.setCurrentIndex(tab_index)
         print(
             "prompting close ",
@@ -502,7 +515,7 @@ class MainWindow(QMainWindow):
         return True
 
     def closeEvent(self, event):
-        """override the QMainWindow close event to ensure tabs are saved or discarded on exit"""
+        """override the QMainWindow class close event to ensure tabs are saved or discarded on exit"""
         for tab_index in range(0, self.tabs.count()):
             if not self.request_tab_close(
                 tab_index
@@ -512,36 +525,40 @@ class MainWindow(QMainWindow):
         event.accept()
 
     def settings_updated_slot(self, temp_settings_profile):
+        """this connection is fired when the settings window profile changes, allowing the editor to update its settings in real time for a cool effect"""
         self.user_settings_profile = temp_settings_profile
         self.update_editor_from_settings()
 
     def save_settings_slot(self, temp_settings_profile):
+        """this connection is fired when the settings window closes, and prompts the save of its settings. It is also fired when the settings window changes profiles."""
         self.user_settings_profile = temp_settings_profile
         save_settings_profile_to_db(self.user_settings_profile)
         self.update_editor_from_settings()
 
     #   actions
     def new_page_button_pressed(self):
+        """add a new editor page"""
         print("new page prompted", tag="editor", tag_color="green", color="white")
         self.add_editor_page()
 
     def insert_image_button_pressed(self):
-            supported_file_filter = "Image Files (*.jpg *.jpeg *.png)"
-            selected_file, selected_filter = QFileDialog.getOpenFileName(
-                self, "Open Image File", "", supported_file_filter
-            )
-            
-            if not selected_file:
-                return
-            
-            selected_file_extension = Path(selected_file).suffix
-            if selected_file_extension not in supported_file_filter:
-                return
-            
-            self.current_editor.user_insert_image(selected_file)
-            
+        """inserts an image by prompting the user to select an image through a file dialog"""
+        supported_file_filter = "Image Files (*.jpg *.jpeg *.png)"
+        selected_file, selected_filter = QFileDialog.getOpenFileName(
+            self, "Open Image File", "", supported_file_filter
+        )
+
+        if not selected_file:
+            return
+
+        selected_file_extension = Path(selected_file).suffix
+        if selected_file_extension not in supported_file_filter:
+            return
+
+        self.current_editor.user_insert_image(selected_file)
 
     def change_text_colour(self):
+        """changes the saved text colour as well as any currently selected text through a dialog"""
         self.text_colour_dialog = QColorDialog()
         self.text_colour_dialog.setCurrentColor(self.text_colour)
 
@@ -555,6 +572,7 @@ class MainWindow(QMainWindow):
         self.text_colour_dialog.show()
 
     def change_highlight_colour(self):
+        """changes the saved highlight colour as well as any currently selected text through a dialog"""
         self.highlight_colour_dialog = QColorDialog()
         self.highlight_colour_dialog.setCurrentColor(self.highlight_colour)
 
@@ -568,6 +586,7 @@ class MainWindow(QMainWindow):
         self.highlight_colour_dialog.show()
 
     def open_home_page(self):
+        """opens the home page and load all recent files. Creates buttons for each recently opened file and connects their clicked call to open the file within the editor"""
         self.home_window = HomeWindow()
 
         confirm_history_files_exist()
@@ -581,6 +600,7 @@ class MainWindow(QMainWindow):
         self.home_window.show()
 
     def open_settings_page(self):
+        """opens the setting page and loads all user profiles into it"""
         self.settings_window = SettingsWindow(get_current_and_username_columns())
 
         # self.settings_window.settings_changed_signal.connect
@@ -592,23 +612,29 @@ class MainWindow(QMainWindow):
 
     # text formatting actions
     def format_text_bold(self):
+        """for signal slot purposes, redirects the function call (chanigng text boldness) to the current editor"""
         self.current_editor.toggle_selected_bold()
 
     def format_text_underline(self):
+        """for signal slot purposes, redirects the function call (chanigng text underline) to the current editor"""
         self.current_editor.toggle_selected_underline()
 
     def format_text_italics(self):
+        """for signal slot purposes, redirects the function call (chanigng text italics) to the current editor"""
         self.current_editor.toggle_selected_italics()
 
     def format_text_font(self, new_font):
+        """for signal slot purposes, redirects the function call (chanigng text font) to the current editor"""
         self.current_editor.setFocus()
         self.current_editor.change_font(new_font)
 
     def format_text_font_size(self, new_size):
+        """for signal slot purposes, redirects the function call (chanigng font size) to the current editor"""
         self.current_editor.setFocus()
         self.current_editor.change_font_size(new_size)
 
     def increase_font_size(self):
+        """increment the font size by 0.5"""
         temp_font_size = (
             f"{float(self.font_size_combo_box_widget.currentText()) + 0.5:g}"
         )
@@ -616,6 +642,7 @@ class MainWindow(QMainWindow):
         self.format_text_font_size(temp_font_size)
 
     def decrease_font_size(self):
+        """decrement the font size by 0.5"""
         temp_font_size = (
             f"{float(self.font_size_combo_box_widget.currentText()) - 0.5:g}"
         )
@@ -623,9 +650,11 @@ class MainWindow(QMainWindow):
         self.format_text_font_size(temp_font_size)
 
     def format_text_colour(self):
+        """for signal slot purposes, redirects the function call (chanigng text colour) to the current editor"""
         self.current_editor.change_color(self.text_colour)
 
     def format_highlight_colour(self):
+        """for signal slot purposes, redirects the function call (highlighting text) to the current editor"""
         self.current_editor.change_highlight(self.highlight_colour)
 
 
