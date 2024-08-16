@@ -104,31 +104,37 @@ class MainWindow(QMainWindow):
         self.font_size_decrease_action.triggered.connect(self.decrease_font_size)
         self.font_size_decrease_action.setCheckable(False)
         self.font_size_decrease_action.setText("-")
-        
+
         self.text_colour_change_action = QAction("&Text Colour", self)
         self.text_colour_change_action.setCheckable(False)
         self.text_colour_change_action.triggered.connect(self.format_text_colour)
         self.text_colour_change_action.setIcon(
             QIcon(os.path.join("images", "icons", "edit-color.png"))
         )
-        
+
         self.text_colour_selection_action = QAction("&Text Colour Selection", self)
         self.text_colour_selection_action.setCheckable(False)
         self.text_colour_selection_action.triggered.connect(self.change_text_colour)
         self.text_colour_selection_action.setIcon(
             QIcon(os.path.join("images", "icons", "color.png"))
         )
-        
+
         self.highlight_colour_change_action = QAction("&Highlight Colour", self)
         self.highlight_colour_change_action.setCheckable(False)
-        self.highlight_colour_change_action.triggered.connect(self.format_highlight_colour)
+        self.highlight_colour_change_action.triggered.connect(
+            self.format_highlight_colour
+        )
         self.highlight_colour_change_action.setIcon(
             QIcon(os.path.join("images", "icons", "highlighter-color.png"))
         )
-        
-        self.highlight_colour_selection_action = QAction("&Highlight Colour Selection", self)
+
+        self.highlight_colour_selection_action = QAction(
+            "&Highlight Colour Selection", self
+        )
         self.highlight_colour_selection_action.setCheckable(False)
-        self.highlight_colour_selection_action.triggered.connect(self.change_highlight_colour)
+        self.highlight_colour_selection_action.triggered.connect(
+            self.change_highlight_colour
+        )
         self.highlight_colour_selection_action.setIcon(
             QIcon(os.path.join("images", "icons", "color.png"))
         )
@@ -200,7 +206,7 @@ class MainWindow(QMainWindow):
         self.default_editor_palette = self.current_editor.palette()
         self.text_colour = QColor()
         self.text_colour_dialog = None
-        self.highlight_colour = QColor().fromRgb(255,255,0)
+        self.highlight_colour = QColor().fromRgb(255, 255, 0)
         self.highlight_colour_dialog = None
 
         create_file_directories()
@@ -341,27 +347,36 @@ class MainWindow(QMainWindow):
             ),
         )
 
-    def update_editor_from_settings(self):       
+    def update_editor_from_settings(self):
         # update editor background colour [editor_background_colour]
-        temp_window_colour = self.user_settings_profile["editor_background_colour"]
-        if temp_window_colour:
-            temp_window_colour = tuple_rgb_to_hex(*temp_window_colour)
-            self.setStyleSheet(f"""
+        temp_window_colour_string = self.user_settings_profile[
+            "editor_background_colour"
+        ]
+        if temp_window_colour_string:
+            temp_window_colour = tuple_rgb_to_hex(*temp_window_colour_string)
+
+            self.setStyleSheet(
+                f"""
                                 * {{
-                                    background-color: {temp_window_colour}
+                                    background-color: '{temp_window_colour}';
                                 }};
-                            """)
+                            """
+            )
         else:
-            self.setStyleSheet(None)
-        
+            self.setStyleSheet("")
+
         # update editor colour [editor_color]
         temp_editor_colour_string = self.user_settings_profile["editor_colour"]
-        temp_editor_colour = None
         if temp_editor_colour_string:
             temp_editor_colour = tuple_rgb_to_hex(*temp_editor_colour_string)
-        self.current_editor.setStyleSheet(f"""
-                                            background-color: {temp_editor_colour}
-                                            """)
+
+            self.current_editor.setStyleSheet(
+                f"""
+                                                background-color: '{temp_editor_colour}';
+                                                """
+            )
+        else:
+            self.current_editor.setStyleSheet("")
 
         # update font size collection (the list of sizes available) [font_size_collection]
         self.font_size_combo_box_widget.clear()
@@ -485,29 +500,31 @@ class MainWindow(QMainWindow):
             color="white",
         )
         self.current_editor.InsertImage()
-        
+
     def change_text_colour(self):
         self.text_colour_dialog = QColorDialog()
         self.text_colour_dialog.setCurrentColor(self.text_colour)
+
         def set_color(colour):
             self.text_colour = QColor(colour)
             print(self.text_colour)
             self.format_text_colour()
-        
+
         self.text_colour_dialog.currentColorChanged.connect(set_color)
-        
+
         self.text_colour_dialog.show()
-        
+
     def change_highlight_colour(self):
         self.highlight_colour_dialog = QColorDialog()
         self.highlight_colour_dialog.setCurrentColor(self.highlight_colour)
+
         def set_color(colour):
             self.highlight_colour = QColor(colour)
             print(self.highlight_colour)
             self.format_highlight_colour()
-        
+
         self.highlight_colour_dialog.currentColorChanged.connect(set_color)
-        
+
         self.highlight_colour_dialog.show()
 
     def open_home_page(self):
@@ -550,7 +567,7 @@ class MainWindow(QMainWindow):
     def format_text_font_size(self, new_size):
         self.current_editor.setFocus()
         self.current_editor.change_font_size(new_size)
-        
+
     def increase_font_size(self):
         temp_font_size = (
             f"{float(self.font_size_combo_box_widget.currentText()) + 0.5:g}"
@@ -564,17 +581,16 @@ class MainWindow(QMainWindow):
         )
         self.font_size_combo_box_widget.setCurrentText(temp_font_size)
         self.format_text_font_size(temp_font_size)
-        
+
     def format_text_colour(self):
         self.current_editor.change_color(self.text_colour)
-        
+
     def format_highlight_colour(self):
         self.current_editor.change_highlight(self.highlight_colour)
-    
 
 
 if __name__ == "__main__":
-    
+
     app = QApplication(sys.argv)
 
     window = MainWindow()
