@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import *
 from historycontroller import *
 from usersettingsprofile import UserSettingsProfile
 from encodedtypes import ENCODING_TYPE, EncodeType, DEFAULT_FONT_SIZE_COLLECTION, DEFAULT_FONT_SIZE
-from encodingcontroller import check_type_validity
+from encodingcontroller import check_type_validity, hash_password
 
 class FileContainer(QWidget):
     def __init__(self, file_path=""):
@@ -153,7 +153,9 @@ class PasswordDialog(QDialog):
             
     
     def password_entered(self, _, password):
-        if password == self.correct_password:
+        print("AKLDAKWLDKLA", password)
+        print(hash_password(password), self.correct_password)
+        if hash_password(password) == self.correct_password:
             print("password correct")
             self.accept()
         else:
@@ -405,6 +407,8 @@ class SettingsWindow(QWidget):
         self.password_entered = False
         self.user_settings_profile = UserSettingsProfile(username)
         self.user_settings_profile["username"] = username
+        
+        # so settings change immediately after profile is changed
         self.settings_saved_signal.emit(self.user_settings_profile)
     
     def load_profile(self, username):
@@ -487,48 +491,6 @@ class SettingsWindow(QWidget):
                 ),
             )
             new_widget.values_changed_signal.connect(self.signal_update_settings)
-            
-            # match ENCODING_TYPE[key]:
-            #     case EncodeType.HEX:
-            #         self.form_layout.addRow(
-            #             key,
-            #             new_widget := ColourButtonWidget(
-            #                 key, self.user_settings_profile[key]
-            #             ),
-            #         )
-            #         new_widget.colour_signal.connect(self.signal_update_settings)
-            #     case EncodeType.STR:
-            #         self.form_layout.addRow(
-            #             key,
-            #             new_widget := StringWidget(
-            #                 key, self.user_settings_profile[key]
-            #             ),
-            #         )
-            #         new_widget.string_signal.connect(self.signal_update_settings)
-            #     case EncodeType.HASH:
-            #         self.form_layout.addRow(
-            #             key,
-            #             new_widget := HashStringWidget(
-            #                 key, self.user_settings_profile[key]
-            #             ),
-            #         )
-            #         new_widget.string_signal.connect(self.signal_update_settings)
-            #     case EncodeType.LIST:
-            #         self.form_layout.addRow(
-            #             key,
-            #             new_widget := StringListWidget(
-            #                 key, self.user_settings_profile[key]
-            #             ),
-            #         )
-            #         new_widget.string_signal.connect(self.signal_update_settings)
-            #     case EncodeType.INT:
-            #         self.form_layout.addRow(
-            #             key,                        
-            #             new_widget := NumberWidget(
-            #                 key, self.user_settings_profile[key]
-            #             ),
-            #         )
-            #         new_widget.number_signal.connect(self.signal_update_settings)
 
     def check_password(self):
         if self.password_entered:
