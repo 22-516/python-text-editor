@@ -212,7 +212,7 @@ class MainWindow(QMainWindow):
         self.default_editor_palette = self.current_editor.palette()
         self.text_colour = QColor()
         self.text_colour_dialog = None
-        self.highlight_colour = QColor().fromRgb(255, 255, 0)
+        self.highlight_colour = QColor().fromRgb(255, 255, 0) # yellow
         self.highlight_colour_dialog = None
 
         create_file_directories()
