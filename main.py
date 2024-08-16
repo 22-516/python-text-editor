@@ -3,7 +3,7 @@ import builtins
 import sys
 from pathlib import Path
 
-# import re
+import re
 from functools import partial
 from print_color import print
 
@@ -322,21 +322,24 @@ class MainWindow(QMainWindow):
 
         if not selected_save_file_path or save_as:
             supported_file_filter = "Text File (*.txt);;Word Document (*.docx)"
-            selected_save_file_path, _ = QFileDialog.getSaveFileName(
+            selected_save_file_path, selected_filter = QFileDialog.getSaveFileName(
                 self, "Save File", "", supported_file_filter
             )
             # grab extension from file path
             # so that the user can enter any extension without selecting the specific filter
-            selected_file_extension = Path(selected_save_file_path).suffix
-            # if (
-            #     selected_save_file_path # if file path is not empty
-            #     # and file extension does not match
-            #     and Path(selected_save_file_path).suffix != selected_file_extension
-            # ):
-            #     # add extension to file path if it does not exist
-            #     selected_save_file_path += selected_file_extension
-            #     selected_save_file_path.strip()
-            #     print(selected_save_file_path, tag="info", tag_color="blue", color="white")
+            print("b", selected_file_extension, selected_save_file_path)
+            if (
+                selected_save_file_path # if file path is not empty
+                # and if file extension does not match (or not exist)
+                and not selected_file_extension
+            ):
+                # add extension to file path if it does not exist
+                # use regex to capture between the brackets in the filter to get current file type
+                # (this is why filters are separated, for ease of use for user when they input a file name)
+                selected_file_extension = re.search(r'\((.+?)\)', selected_filter or supported_file_filter).group(1).replace('*',"")
+                selected_save_file_path += selected_file_extension
+                selected_save_file_path.strip()
+                print(selected_save_file_path, tag="info", tag_color="blue", color="white")
 
         if file_controller_save_file(
             self.current_editor, selected_save_file_path, selected_file_extension
