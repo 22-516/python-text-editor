@@ -206,6 +206,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Editor")
         # self.setGeometry(0, 0, 800, 600)
         self.add_editor_page()
+        self.update_editor_from_settings()
 
         # self.status_bar = QStatusBar()
         # self.setStatusBar(self.status_bar)
