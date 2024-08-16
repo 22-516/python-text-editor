@@ -4,10 +4,18 @@ from PyQt6.QtWidgets import *
 
 from historycontroller import *
 from usersettingsprofile import UserSettingsProfile
-from encodedtypes import ENCODING_TYPE, EncodeType, DEFAULT_FONT_SIZE_COLLECTION, DEFAULT_FONT_SIZE
+from encodedtypes import (
+    ENCODING_TYPE,
+    EncodeType,
+    DEFAULT_FONT_SIZE_COLLECTION,
+    DEFAULT_FONT_SIZE,
+)
 from encodingcontroller import check_type_validity, hash_password
 
+
 class FileContainer(QWidget):
+    """contains containers with file paths"""
+
     def __init__(self, file_path=""):
         super().__init__()
 
@@ -55,6 +63,8 @@ class FileContainer(QWidget):
 
 
 class HomeWindow(QTabWidget):
+    """recent file page"""
+
     def __init__(self):
         super().__init__()
 
@@ -74,10 +84,6 @@ class HomeWindow(QTabWidget):
 
         self.recent_tab_vertical_layout = QVBoxLayout()
 
-        """for file_path in FetchRecentFileList():
-            print(file_path)
-            scrollingVLayout.addWidget(FileContainer(file_path))"""
-
         self.recent_tab_scrolling_frame.setLayout(self.recent_tab_vertical_layout)
         self.recent_tab_page.setWidget(self.recent_tab_scrolling_frame)
 
@@ -87,72 +93,66 @@ class HomeWindow(QTabWidget):
         self.recent_tab_vertical_layout.addWidget(button)
 
 
-# class SettingsWidget(QWidget):
-#     def __init__(self, widget_name):
-#         super().__init__()
-#         self.vertical_layout = QVBoxLayout()
-#         self.setLayout(self.vertical_layout)
-
-#         self.title_label = QLabel()
-#         self.title_label.setText(widget_name)
-#         self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-#         self.vertical_layout.addWidget(self.title_label)
-
-#         self.setLayout(self.vertical_layout)
-
 class StringWidget(QLineEdit):
+    """simple widget with an editable string line"""
     values_changed_signal = pyqtSignal(str, str)
-    def __init__(self, value_type, string_value : str):
+
+    def __init__(self, value_type, string_value: str):
         super().__init__()
         self.value_type = value_type
-        
+
         self.setText(string_value)
-        
+
         self.setPlaceholderText("Enter Text:")
         self.editingFinished.connect(self.editing_finished)
-        
+
     def editing_finished(self):
         print(self.text())
         self.values_changed_signal.emit(self.value_type, self.text())
 
+
 class HashStringWidget(StringWidget):
-    def __init__(self, value_type, string_value : str):
+    """StringWidget but with a password mask"""
+    def __init__(self, value_type, string_value: str):
         super().__init__(value_type, None)
         super().setPlaceholderText("Enter Password")
         super().setEchoMode(QLineEdit.EchoMode.Password)
 
+
 class PasswordDialog(QDialog):
-    def __init__(self, correct_password : str):
+    """whole page to check if password is correct"""
+    def __init__(self, correct_password: str):
         super().__init__()
         self.correct_password = correct_password
-        
+
         self.vertical_layout = QVBoxLayout()
         self.horizontal_layout = QHBoxLayout()
-        
+
         self.error_label = QLabel()
         self.error_timer = None
-        
+
         self.name_label = QLabel()
         self.name_label.setText("Enter the password to edit this profile:")
-        
+
         self.password_widget = HashStringWidget("password", None)
         self.password_widget.values_changed_signal.connect(self.password_entered)
-        
+
         self.vertical_layout.addWidget(self.error_label)
         self.vertical_layout.addWidget(self.name_label)
-        
+
         self.horizontal_layout.addWidget(self.password_widget)
         self.vertical_layout.addLayout(self.horizontal_layout)
         self.setLayout(self.vertical_layout)
-        
+
     def flash_error_label(self):
+        """flash error label so its more easy to see"""
         if self.error_label.text() is not None and self.error_label.text() != "":
             self.error_label.setText("")
         else:
             self.error_label.setText("The password you have entered is not correct.")
-            
-    
+
     def password_entered(self, _, password):
+        """check password with stored database password"""
         print("AKLDAKWLDKLA", password)
         print(hash_password(password), self.correct_password)
         if hash_password(password) == self.correct_password:
@@ -160,41 +160,62 @@ class PasswordDialog(QDialog):
             self.accept()
         else:
             self.flash_error_label()
-            #self.error_label.setText("The password you have entered is not correct.")
-            
+            # self.error_label.setText("The password you have entered is not correct.")
+
             self.error_timer = QTimer()
             self.error_timer.timeout.connect(self.flash_error_label)
             self.error_timer.start(1000)
-            #self.error_dialog = QErrorMessage()
-            #self.error_dialog.showMessage("The password you have entered is not correct.")
+            # self.error_dialog = QErrorMessage()
+            # self.error_dialog.showMessage("The password you have entered is not correct.")
+
 
 class StringListWidget(QWidget):
+    """simple list widget showing all list values as strings, editable"""
     values_changed_signal = pyqtSignal(str, list)
+
     def __init__(self, value_type, input_list):
         super().__init__()
         self.value_type = value_type
-        #self.inital_numbers_list = []
+        # self.inital_numbers_list = []
 
         self.horizontal_layout = QHBoxLayout(self)
 
         self.list_widget = QListWidget()
-        
+
         self.vertical_layout = QVBoxLayout()
-        
-        self.list_widget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+
+        self.list_widget.setSelectionMode(
+            QAbstractItemView.SelectionMode.SingleSelection
+        )
         # self.list_widget.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
         # self.list_widget.setDragEnabled(True)
         # self.list_widget.setDropIndicatorShown(True)
         # self.list_widget.setDefaultDropAction(Qt.DropAction.MoveAction)
 
-        self.move_up_button = QPushButton(QIcon(os.path.join("images", "icons", "arrow-up.png")), "Move Up")
-        self.move_up_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-        self.move_down_button = QPushButton(QIcon(os.path.join("images", "icons", "arrow-down.png")), "Move Down")
-        self.move_down_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-        self.new_item_button = QPushButton(QIcon(os.path.join("images", "icons", "plus.png")), "New Item")
-        self.new_item_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-        self.remove_item_button = QPushButton(QIcon(os.path.join("images", "icons", "minus.png")), "Remove Item")
-        self.remove_item_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.move_up_button = QPushButton(
+            QIcon(os.path.join("images", "icons", "arrow-up.png")), "Move Up"
+        )
+        self.move_up_button.setSizePolicy(
+            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding
+        )
+        self.move_down_button = QPushButton(
+            QIcon(os.path.join("images", "icons", "arrow-down.png")), "Move Down"
+        )
+        self.move_down_button.setSizePolicy(
+            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding
+        )
+        self.new_item_button = QPushButton(
+            QIcon(os.path.join("images", "icons", "plus.png")), "New Item"
+        )
+        self.new_item_button.setSizePolicy(
+            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding
+        )
+        self.remove_item_button = QPushButton(
+            QIcon(os.path.join("images", "icons", "minus.png")), "Remove Item"
+        )
+        self.remove_item_button.setSizePolicy(
+            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding
+        )
 
         self.move_up_button.clicked.connect(self.move_list_item_up)
         self.move_down_button.clicked.connect(self.move_list_item_down)
@@ -213,7 +234,7 @@ class StringListWidget(QWidget):
             input_list = DEFAULT_FONT_SIZE_COLLECTION
         for _, value in enumerate(input_list):
             item = QListWidgetItem()
-            #self.inital_numbers_list.append(item)
+            # self.inital_numbers_list.append(item)
             item.setText(str(value))
             self.list_widget.addItem(item)
             self.list_widget.openPersistentEditor(item)
@@ -221,6 +242,7 @@ class StringListWidget(QWidget):
         self.list_widget.itemChanged.connect(self.send_list_signal)
 
     def get_list_items_as_list(self):
+        """appends the list widget items to a list"""
         temp_list = []
         for index in range(self.list_widget.count()):
             item_widget = self.list_widget.item(index)
@@ -232,6 +254,7 @@ class StringListWidget(QWidget):
         return temp_list
 
     def move_list_item_up(self):
+        """moves list widget up"""
         current_index = self.list_widget.currentRow()
         if current_index > 0:
             item = self.list_widget.takeItem(current_index)
@@ -240,6 +263,7 @@ class StringListWidget(QWidget):
             self.send_list_signal()
 
     def move_list_item_down(self):
+        """moves list widget down"""
         current_index = self.list_widget.currentRow()
         if current_index < self.list_widget.count() - 1:
             item = self.list_widget.takeItem(current_index)
@@ -248,6 +272,7 @@ class StringListWidget(QWidget):
             self.send_list_signal()
 
     def add_list_item(self):
+        """adds list widget"""
         new_item = QListWidgetItem()
         new_item.setText(str(0))
         # self.integers.append(new_item)
@@ -257,6 +282,7 @@ class StringListWidget(QWidget):
         self.send_list_signal()
 
     def remove_list_item(self):
+        """removes list widget"""
         current_index = self.list_widget.currentRow()
         if current_index >= 0:
             self.list_widget.takeItem(current_index)
@@ -264,44 +290,54 @@ class StringListWidget(QWidget):
             self.send_list_signal()
 
     def send_list_signal(self):
+        """tells settings window to change settings"""
         self.values_changed_signal.emit(self.value_type, self.get_list_items_as_list())
 
+
 class NumberWidget(QDoubleSpinBox):
+    """simple widget with a spinbox"""
     values_changed_signal = pyqtSignal(str, float)
-    def __init__(self, value_type, number_value : float):
+
+    def __init__(self, value_type, number_value: float):
         super().__init__()
         self.value_type = value_type
-        
+
         if not number_value:
             number_value = DEFAULT_FONT_SIZE
-        
+
         self.setMinimum(0)
         self.setMaximum(8192)
         self.setSingleStep(0.5)
         self.setValue(number_value)
-        
+
         self.valueChanged.connect(self.editing_finished)
-        
+
     def editing_finished(self):
         print(self.value())
         self.values_changed_signal.emit(self.value_type, self.value())
 
+
 class FontWidget(QFontComboBox):
+    """simple widget with a font box"""
     values_changed_signal = pyqtSignal(str, QFont)
-    def __init__(self, value_type, font : QFont):
+
+    def __init__(self, value_type, font: QFont):
         super().__init__()
         self.value_type = value_type
-        
+
         self.setEditable(False)
         # set to latin for english fonts
         self.setWritingSystem(QFontDatabase.WritingSystem.Latin)
         self.currentFontChanged.connect(self.font_selected)
-    
+
     def font_selected(self, new_font):
         self.values_changed_signal.emit(self.value_type, new_font)
 
+
 class ColourButtonWidget(QFrame):
+    """widget that lets user change colour"""
     values_changed_signal = pyqtSignal(str, tuple)
+
     def __init__(self, value_type, rgb_value: tuple):
         if not rgb_value:
             rgb_value = (0, 0, 0)
@@ -314,23 +350,39 @@ class ColourButtonWidget(QFrame):
         self.colour_dialog = QColorDialog()
         self.value_type = value_type
         self.new_palette = QPalette()
-        self.new_palette.setColor(QPalette.ColorRole.Window, QColor().fromRgb(*rgb_value))
+        self.new_palette.setColor(
+            QPalette.ColorRole.Window, QColor().fromRgb(*rgb_value)
+        )
         self.setPalette(self.new_palette)
 
     def set_colour(self, rgb_value: tuple):
+        """sets colour of frame and sends signal back to settings window"""
         if not rgb_value:
-            self.new_palette.setColor(QPalette.ColorRole.Window, QColor().fromRgb(0,0,0))
+            self.new_palette.setColor(
+                QPalette.ColorRole.Window, QColor().fromRgb(0, 0, 0)
+            )
         else:
-            self.new_palette.setColor(QPalette.ColorRole.Window, QColor().fromRgb(*rgb_value))
+            self.new_palette.setColor(
+                QPalette.ColorRole.Window, QColor().fromRgb(*rgb_value)
+            )
         self.setPalette(self.new_palette)
-        self.values_changed_signal.emit(self.value_type, rgb_value if rgb_value is not None else tuple())
+        self.values_changed_signal.emit(
+            self.value_type, rgb_value if rgb_value is not None else tuple()
+        )
 
     # overwrite mouse press event to open colour dialog
     def mousePressEvent(self, mouse_event: QMouseEvent):
+        """detect mouse input to launch colour dialog"""
         if mouse_event.button() == Qt.MouseButton.LeftButton:
             # print("left")
-            self.colour_dialog.setCurrentColor(QColor().fromRgb(*self.new_palette.color(QPalette.ColorRole.Window).getRgb()))
-            self.colour_dialog.currentColorChanged.connect(lambda color: self.set_colour(color.getRgb()))
+            self.colour_dialog.setCurrentColor(
+                QColor().fromRgb(
+                    *self.new_palette.color(QPalette.ColorRole.Window).getRgb()
+                )
+            )
+            self.colour_dialog.currentColorChanged.connect(
+                lambda color: self.set_colour(color.getRgb())
+            )
             self.colour_dialog.show()
         elif mouse_event.button() == Qt.MouseButton.RightButton:
             # print("right")
@@ -340,14 +392,16 @@ class ColourButtonWidget(QFrame):
 
 
 class SettingsWindow(QWidget):
+    """main settings window"""
     settings_changed_signal = pyqtSignal(UserSettingsProfile)
     settings_saved_signal = pyqtSignal(UserSettingsProfile)
     settings_deleted_signal = pyqtSignal(str)
+
     def __init__(self, all_profiles):
         super().__init__()
 
         self.setWindowTitle("Settings")
-        
+
         self.password_entered = False
         self.password_widget = None
 
@@ -355,10 +409,14 @@ class SettingsWindow(QWidget):
         self.combo_box_horizontal_layout = QHBoxLayout()
 
         self.username_combo_box = QComboBox()
-        self.username_combo_box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.username_combo_box.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum
+        )
         self.username_combo_box.setEditable(True)
         self.username_combo_box.setDuplicatesEnabled(False)
-        self.username_combo_box.setInsertPolicy(QComboBox.InsertPolicy.InsertAfterCurrent)
+        self.username_combo_box.setInsertPolicy(
+            QComboBox.InsertPolicy.InsertAfterCurrent
+        )
         current_profile_username = None
         # if the database contains user data
         if all_profiles:
@@ -371,7 +429,7 @@ class SettingsWindow(QWidget):
             # print("AAAAAAAAAAAAAAAAAAAAAAAAAAAA")
             current_profile_username = "Default"
             self.username_combo_box.addItem(current_profile_username)
-            #self.user_settings_profile["username"] = current_profile_username
+            # self.user_settings_profile["username"] = current_profile_username
         # set index to current username
 
         if current_profile_username:
@@ -379,13 +437,15 @@ class SettingsWindow(QWidget):
         else:
             self.username_combo_box.setCurrentIndex(0)
 
-        #self.user_settings_profile = UserSettingsProfile(current_profile_username)
+        # self.user_settings_profile = UserSettingsProfile(current_profile_username)
         self.user_settings_profile = None
 
         self.username_combo_box.activated.connect(self.profile_name_changed)
         self.profile_title_label = QLabel("Select a Profile:")
 
-        self.profile_delete_button = QPushButton(QIcon(os.path.join("images", "icons", "minus.png")), "Delete Profile")
+        self.profile_delete_button = QPushButton(
+            QIcon(os.path.join("images", "icons", "minus.png")), "Delete Profile"
+        )
         self.profile_delete_button.clicked.connect(self.delete_profile)
 
         self.combo_box_horizontal_layout.addWidget(self.profile_title_label)
@@ -400,38 +460,48 @@ class SettingsWindow(QWidget):
 
         self.vertical_layout.addLayout(self.form_layout)
         self.setLayout(self.vertical_layout)
-        
+
         self.change_profile(current_profile_username)
-        
+
     def change_profile(self, username):
+        """changes user profile"""
         self.password_entered = False
         self.user_settings_profile = UserSettingsProfile(username)
         self.user_settings_profile["username"] = username
-        
+
         # so settings change immediately after profile is changed
         self.settings_saved_signal.emit(self.user_settings_profile)
-    
+
     def load_profile(self, username):
+        """loads user profile"""
         self.change_profile(username)
         self.reset_settings_page()
         self.populate_form_layout()
-            
+
     def profile_name_changed(self, row_int):
+        """update settings windows to reflect name change"""
         # check if new username is valid
-        success = self.update_settings_profile("username", current_username := self.username_combo_box.currentText())
+        success = self.update_settings_profile(
+            "username", current_username := self.username_combo_box.currentText()
+        )
         if not success:
             self.username_combo_box.removeItem(row_int)
-            self.username_combo_box.setCurrentText(self.user_settings_profile["username"])
+            self.username_combo_box.setCurrentText(
+                self.user_settings_profile["username"]
+            )
         else:
             self.load_profile(current_username)
 
     def delete_profile(self):
+        """deletes profile"""
         self.settings_deleted_signal.emit(self.user_settings_profile["username"])
 
         self.username_combo_box.removeItem(self.username_combo_box.currentIndex())
         if self.username_combo_box.count() > 0:
             self.username_combo_box.setCurrentIndex(0)
-            self.user_settings_profile = UserSettingsProfile(self.username_combo_box.currentText())
+            self.user_settings_profile = UserSettingsProfile(
+                self.username_combo_box.currentText()
+            )
         else:
             self.user_settings_profile = UserSettingsProfile("Default")
             self.username_combo_box.addItem("Default")
@@ -440,14 +510,15 @@ class SettingsWindow(QWidget):
         self.settings_saved_signal.emit(self.user_settings_profile)
         self.reset_settings_page()
         self.populate_form_layout()
-        
+
     def rename_profile(self, old_name, new_name):
+        """rename profile and tell settings window to also reflect changes"""
         if old_name == new_name:
             # unneeded renaming
             return
-        
+
         self.username_combo_box.setCurrentText(new_name)
-        
+
         for index in range(self.username_combo_box.count()):
             if self.username_combo_box.itemText(index) == old_name:
                 self.username_combo_box.setItemText(index, new_name)
@@ -457,17 +528,19 @@ class SettingsWindow(QWidget):
         self.settings_saved_signal.emit(self.user_settings_profile)
 
     def reset_settings_page(self):
-        for i in reversed(range(self.form_layout.count())): 
+        """resets the whole settings page and its widgets"""
+        for i in reversed(range(self.form_layout.count())):
             self.form_layout.itemAt(i).widget().setParent(None)
 
     def populate_form_layout(self):
-        #print(self.user_settings_profile)
+        """repopulates the form layout with all the available settings"""
+        # print(self.user_settings_profile)
         for _, key in enumerate(self.user_settings_profile):
             if not key in ENCODING_TYPE:
                 print(key, "setting does not exist")
                 continue
             widget_class = None
-            
+
             match ENCODING_TYPE[key]:
                 case EncodeType.HEX:
                     widget_class = ColourButtonWidget
@@ -484,18 +557,18 @@ class SettingsWindow(QWidget):
                 case _:
                     print(key, "setting exists but does not have a widget")
                     continue
-                
-            self.form_layout.addRow(key,
-                new_widget := widget_class(
-                    key, self.user_settings_profile[key]
-                ),
+
+            self.form_layout.addRow(
+                key,
+                new_widget := widget_class(key, self.user_settings_profile[key]),
             )
             new_widget.values_changed_signal.connect(self.signal_update_settings)
 
     def check_password(self):
+        """checks the password against the one in the database"""
         if self.password_entered:
             return True
-        
+
         print("password not entered yet")
         if not self.user_settings_profile["password"]:
             print("no password set")
@@ -505,9 +578,9 @@ class SettingsWindow(QWidget):
         if result == QDialog.DialogCode.Accepted:
             self.password_entered = True
             self.password_widget.setParent(None)
-        
 
     def signal_update_settings(self, value_type, value):
+        """signal the editor to update its settings"""
         if not self.check_password():
             return
         self.update_settings_profile(value_type, value)
@@ -515,6 +588,7 @@ class SettingsWindow(QWidget):
         # ( may not be the root cause, but is a good change regardless )
 
     def update_settings_profile(self, value_type, value):
+        """update settings locally and on the editor"""
         print(value_type, value)
         validity_state, temp_value = check_type_validity(value_type, value)
         print(validity_state, temp_value)
@@ -522,14 +596,17 @@ class SettingsWindow(QWidget):
             print(validity_state)
             self.error_message.showMessage(validity_state)
             # print("alkdkawda")
-            
+
             # self.reset_settings_page()
             # self.populate_form_layout()
             return False
 
         self.user_settings_profile[value_type] = temp_value
-        
-        self.rename_profile(self.username_combo_box.currentText(), self.user_settings_profile["username"])
+
+        self.rename_profile(
+            self.username_combo_box.currentText(),
+            self.user_settings_profile["username"],
+        )
         # self.username_combo_box.setCurrentText(self.user_settings_profile["username"])
         # print(value_type, temp_value)
         # print(self.user_settings_profile)
@@ -539,11 +616,14 @@ class SettingsWindow(QWidget):
         return True
 
     def closeEvent(self, event):
+        """closing window event"""
         print("settings window closed")
         self.settings_saved_signal.emit(self.user_settings_profile)
         event.accept()
 
+
 class TabCloseDialog(QMessageBox):
+    """dialog for when a tab is closed"""
     def __init__(self):
         super().__init__()
         self.setIcon(QMessageBox.Icon.Question)
@@ -561,17 +641,3 @@ class TabCloseDialog(QMessageBox):
         self.setDefaultButton(QMessageBox.StandardButton.Save)
         self.setEscapeButton(QMessageBox.StandardButton.Cancel)
 
-
-# def OpenFileFromHomePage():
-#    def
-
-# testing settings window
-if __name__ == "__main__":
-    import sys
-
-    app = QApplication(sys.argv)
-
-    window = SettingsWindow(UserSettingsProfile("test1"))
-    window.show()
-
-    app.exec()

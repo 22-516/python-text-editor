@@ -22,11 +22,13 @@ from encodedtypes import (
 
 
 def tuple_rgb_to_hex(r, g, b, _=None):
+    """converts tuple of rgb (r,g,b) back into hex value"""
     # unused var as PyQt rgb values include transparency (unneeded) so we discard
     return f"#{int(round(r)):02x}{int(round(g)):02x}{int(round(b)):02x}"
 
 
 def hex_to_tuple_rgb(hex_code):
+    """encodes hex colour value into a tuple with rgb values (r,g,b)"""
     if not hex_code:
         print("failed to decode from hex")
         return None
@@ -36,28 +38,31 @@ def hex_to_tuple_rgb(hex_code):
 
 
 def list_encode_to_string(input_list: list):
+    """encodes a list into a string"""
     if not input_list:
         return None
     return "/".join(map(str, input_list))
 
 
 def string_decode_to_list(input_string: str):
+    """decodes the database string into a list of values"""
     if not input_string:
         return None
     return input_string.split("/")
 
 
 def qfont_to_string(input_font: QFont):
+    """returns a string of the font family"""
     return QFontInfo(input_font).family()
 
 
 def string_to_qfont(input_string: str):
+    """returns a font"""
     return QFont(input_string)
 
 
 def hash_password(password : str):
-    # since bcrypt stores the salt within the hash, no need to store salt separately in db
-    # bcrypt requires bytes
+    """hashes the password"""
     bytes_password = password
     if type(password) == str:
         bytes_password = password.encode("utf-8")
@@ -67,6 +72,7 @@ def hash_password(password : str):
 
 
 def check_type_validity(value_type, input_value):
+    """checks boundary and type checks, length checks, etc, for proper formatting"""
     if not value_type in ENCODING_TYPE:
         raise KeyError("value_type not in ENCODING_TYPE")
 
@@ -153,6 +159,7 @@ def check_type_validity(value_type, input_value):
 
 
 def decode_from_db_value(db_column, db_value):
+    """decodes the database values into values readable by the program"""
     if not db_value:
         return None
     if db_column in ENCODING_TYPE:
@@ -172,6 +179,7 @@ def decode_from_db_value(db_column, db_value):
 
 
 def encode_to_db_value(db_column, db_value):
+    """encodes the settings values into database values (as they can only be stored as strings)"""
     if not db_value:
         return None
     if db_column in ENCODING_TYPE:
