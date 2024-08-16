@@ -25,6 +25,7 @@ from PyQt6.QtWidgets import (
 
 from guilib import *  # FileContainer, TabCloseDialog
 from encodedtypes import *
+from encodingcontroller import tuple_rgb_to_hex
 from texteditor import *
 from historycontroller import *
 from filescontroller import *
@@ -340,28 +341,36 @@ class MainWindow(QMainWindow):
             ),
         )
 
-    def update_editor_from_settings(self):
-        # update editor colour editor_color
-        temp_editor_viewport = self.current_editor.viewport()
-        temp_editor_palette = temp_editor_viewport.palette()
-        temp_colour = self.user_settings_profile["editor_colour"]
-        if temp_colour:
-            temp_editor_palette.setColor(
-                temp_editor_viewport.backgroundRole(), QColor.fromRgb(*temp_colour)
-            )
+    def update_editor_from_settings(self):       
+        # update editor background colour [editor_background_colour]
+        temp_window_colour = self.user_settings_profile["editor_background_colour"]
+        if temp_window_colour:
+            temp_window_colour = tuple_rgb_to_hex(*temp_window_colour)
+            self.setStyleSheet(f"""
+                                * {{
+                                    background-color: {temp_window_colour}
+                                }};
+                            """)
         else:
-            # temp_editor_palette= self.current_editor.style().standardPalette()
-            temp_editor_palette = self.default_editor_palette
-        temp_editor_viewport.setPalette(temp_editor_palette)
+            self.setStyleSheet(None)
+        
+        # update editor colour [editor_color]
+        temp_editor_colour_string = self.user_settings_profile["editor_colour"]
+        temp_editor_colour = None
+        if temp_editor_colour_string:
+            temp_editor_colour = tuple_rgb_to_hex(*temp_editor_colour_string)
+        self.current_editor.setStyleSheet(f"""
+                                            background-color: {temp_editor_colour}
+                                            """)
 
-        # update font size collection
+        # update font size collection (the list of sizes available) [font_size_collection]
         self.font_size_combo_box_widget.clear()
         if not (font_collection := self.user_settings_profile["font_size_collection"]):
             font_collection = DEFAULT_FONT_SIZE_COLLECTION
         for index, font_size_value in enumerate(font_collection):
             self.font_size_combo_box_widget.insertItem(index, str(font_size_value))
 
-        # update default font and font size
+        # update default font and font size [default_font, default_font_size]
         temp_font = self.user_settings_profile["default_font"] or QFont(
             DEFAULT_FONT_FAMILY
         )
@@ -372,11 +381,6 @@ class MainWindow(QMainWindow):
 
         # prompt editor to show new formatting changes
         self.on_editor_selection_change()
-
-        # default editor formatting
-        # default_font = QFont()
-
-        # for index in reversed(range(self.font_size_combo_box_widget.count())):
 
     #   signals
     def on_editor_selection_change(
