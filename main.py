@@ -284,7 +284,11 @@ class MainWindow(QMainWindow):
                     self.current_editor.setText("")
                     new_cursor = self.current_editor.textCursor()
                     for format_list in file_content:
-                        new_cursor.insertText(str(format_list[0]), format_list[1])
+                        print(format_list)
+                        if type(format_list) == str:
+                            new_cursor.insertHtml(format_list)
+                        else:
+                            new_cursor.insertText(str(format_list[0]), format_list[1])
         except Exception as exception:
             print("error occured during opening file", exception)
         else:

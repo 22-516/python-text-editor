@@ -1,7 +1,13 @@
 import io
+import base64
+import os
+from pathlib import Path
+import tempfile
+
 from docx import Document
 from docx.shared import Pt, RGBColor
 from docx.enum.text import WD_COLOR_INDEX
+import docx2txt
 
 from PyQt6.QtCore import *  # temp
 from PyQt6.QtGui import *
@@ -65,6 +71,7 @@ def dump(obj):
 def parse_docx_file_to_list(docx_file_path : str):
     docx_file = Document(docx_file_path)
     file_formatting_list = []
+    images_list = []
     
     def docx_colour_to_qcolor(colour):
         return QColor.fromRgb(*colour)
@@ -80,17 +87,50 @@ def parse_docx_file_to_list(docx_file_path : str):
             temp_format = QTextCharFormat()
             temp_font = temp_run.font
             
-            temp_format.setFontFamily(temp_font.name)
-            temp_format.setFontUnderline(temp_font.underline or False)
-            temp_format.setFontItalic(temp_font.italic or False)
-            temp_format.setFontWeight(QFont.Weight.Bold if temp_font.bold else QFont.Weight.Normal)
-            temp_format.setFontPointSize(temp_font.size)
-            temp_format.setBackground(qcolor_from_colours(str(temp_font.highlight_color)))
-            temp_format.setForeground(docx_colour_to_qcolor(hex_to_tuple_rgb(str(temp_font.color.rgb))))
+            formatted_list = None
+            current_image_count = 0
             
-            formatted_list = (temp_run.text, temp_format)
+            if temp_font.size:
+                # this is the only reliable method I found that could detect if an image is present
+                # within a run ( when there is an image, font.size is None type )
+                # (blame bad documentation!!!)
+                temp_format.setFontFamily(temp_font.name)
+                temp_format.setFontUnderline(temp_font.underline or False)
+                temp_format.setFontItalic(temp_font.italic or False)
+                temp_format.setFontWeight(QFont.Weight.Bold if temp_font.bold else QFont.Weight.Normal)
+                temp_format.setFontPointSize(temp_font.size / 12700)
+                temp_format.setBackground(qcolor_from_colours(str(temp_font.highlight_color)))
+                temp_format.setForeground(docx_colour_to_qcolor(hex_to_tuple_rgb(str(temp_font.color.rgb))))
+                
+                formatted_list = (temp_run.text, temp_format)
+            else:
+                #temp_format = QTextImageFormat()
+                image_bytes = None
+                
+                current_image_count = current_image_count + 1
+                
+                with tempfile.TemporaryDirectory() as temp_directory:
+                    # easiest way to get the images ( saved in temp_directory )
+                    _ = docx2txt.process(docx_file_path, temp_directory)
+                    
+                    image_bytes = Path(os.path.join(temp_directory, f"image{current_image_count}.png")).read_bytes()
+                    
+                    binary = base64.b64encode(image_bytes)
+                    html_bin = '<img src= "data:image/*;base64,{}" max-width=100% max-height=100%></img>'.format(
+                        str(binary, "utf-8")
+                    )
+
+                formatted_list = html_bin
+                            #break
+                # print(temp_run)
+                # dump(temp_run)
+                # dump(temp_run.font)
+                
             file_formatting_list.append(formatted_list)
             #print(str(temp_font.highlight_color))
+            
+    for s in docx_file.inline_shapes:
+        dump(s)
     return file_formatting_list
 
             
