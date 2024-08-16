@@ -68,8 +68,9 @@ class MainWindow(QMainWindow):
         self.settings_action = QAction("&Settings", self)
         self.settings_action.triggered.connect(self.open_settings_page)
 
-        self.insert_image_action = QAction("&Insert Test Image", self)
+        self.insert_image_action = QAction("&Insert Image", self)
         self.insert_image_action.triggered.connect(self.insert_image_button_pressed)
+        
         # text formatting actions
         self.text_bold_action = QAction("&Bold", self)
         self.text_bold_action.triggered.connect(self.format_text_bold)
@@ -183,6 +184,9 @@ class MainWindow(QMainWindow):
         file_menu_button.addAction(self.save_file_action)
         file_menu_button.addAction(self.save_as_file_action)
         file_menu_button.addAction(self.open_file_action)
+        
+        insert_menu_button = self.menubar.addMenu("Insert")
+        insert_menu_button.addAction(self.insert_image_action)
 
         # initalise toolbar
         self.toolbar = QToolBar("main toolbar", self)
@@ -515,14 +519,20 @@ class MainWindow(QMainWindow):
         self.add_editor_page()
 
     def insert_image_button_pressed(self):
-        print(
-            "inserting test image",
-            self.current_editor,
-            tag="editor",
-            tag_color="green",
-            color="white",
-        )
-        self.current_editor.InsertImage()
+            supported_file_filter = "Image Files (*.jpg *.jpeg *.png)"
+            selected_file, selected_filter = QFileDialog.getOpenFileName(
+                self, "Open Image File", "", supported_file_filter
+            )
+            
+            if not selected_file:
+                return
+            
+            selected_file_extension = Path(selected_file).suffix
+            if selected_file_extension not in supported_file_filter:
+                return
+            
+            self.current_editor.user_insert_image(selected_file)
+            
 
     def change_text_colour(self):
         self.text_colour_dialog = QColorDialog()

@@ -96,10 +96,10 @@ class TextEditor(QTextEdit):
                     return
         super().insertFromMimeData(source)
 
-    def InsertImage(self):  # testing
+    def user_insert_image(self, image_path):  # testing
         cursor = QTextCursor(self.textCursor())
         image_format = QTextImageFormat()
-        image_format.setName("images/icons/edit-bold.png")
+        image_format.setName(image_path)
         cursor.insertImage(image_format)
 
     def set_file_path(self, file_path=""):
