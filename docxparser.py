@@ -67,7 +67,12 @@ def apply_formatting(character_format: QTextCharFormat, temp_run):
             temp_font_colour[0], temp_font_colour[1], temp_font_colour[2]
         )
     if temp_font_highlight_colour := character_format.background().color().getRgb():
-        temp_run.highlight_color = find_nearest_colour(temp_font_highlight_colour)
+        print(temp_font_highlight_colour)
+        if temp_font_highlight_colour != (0, 0, 0, 255): # if highlight colour is not transparent black (white)
+            new_font_highlight_colour = find_nearest_colour(temp_font_highlight_colour)
+            temp_run.font.highlight_color = new_font_highlight_colour[3]
+        else:
+            temp_run.font.highlight_color = None
 
 
 def parse_docx_file_to_list(docx_file_path: str):
@@ -105,7 +110,7 @@ def parse_docx_file_to_list(docx_file_path: str):
                 )
                 temp_format.setFontPointSize(temp_font.size / 12700)
                 temp_format.setBackground(
-                    qcolor_from_colours(str(temp_font.highlight_color))
+                    qcolor_from_colours(temp_font.highlight_color)
                 )
                 temp_format.setForeground(
                     docx_colour_to_qcolor(hex_to_tuple_rgb(str(temp_font.color.rgb)))

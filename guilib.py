@@ -1,3 +1,5 @@
+from math import copysign
+from shelve import DbfilenameShelf
 from PyQt6.QtCore import *  # temp
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
@@ -9,8 +11,9 @@ from encodedtypes import (
     EncodeType,
     DEFAULT_FONT_SIZE_COLLECTION,
     DEFAULT_FONT_SIZE,
+    DEFAULT_FONT_FAMILY,
 )
-from encodingcontroller import check_type_validity, hash_password
+from encodingcontroller import check_type_validity, hash_password, string_to_qfont
 
 
 class FileContainer(QWidget):
@@ -107,7 +110,7 @@ class StringWidget(QLineEdit):
         self.editingFinished.connect(self.editing_finished)
 
     def editing_finished(self):
-        print(self.text())
+        #print(self.text())
         self.values_changed_signal.emit(self.value_type, self.text())
 
 
@@ -153,8 +156,8 @@ class PasswordDialog(QDialog):
 
     def password_entered(self, _, password):
         """check password with stored database password"""
-        print("AKLDAKWLDKLA", password)
-        print(hash_password(password), self.correct_password)
+
+        #print("checking passwords", hash_password(password), self.correct_password)
         if hash_password(password) == self.correct_password:
             print("password correct")
             self.accept()
@@ -321,16 +324,22 @@ class FontWidget(QFontComboBox):
     """simple widget with a font box"""
     values_changed_signal = pyqtSignal(str, QFont)
 
-    def __init__(self, value_type, font: QFont):
+    def __init__(self, value_type, db_font):
         super().__init__()
         self.value_type = value_type
 
         self.setEditable(False)
         # set to latin for english fonts
         self.setWritingSystem(QFontDatabase.WritingSystem.Latin)
+        
+        #print("db font is ", db_font)
+
+        temp_qfont = db_font if isinstance(db_font, QFont) else string_to_qfont(db_font if db_font else DEFAULT_FONT_FAMILY)
+        self.setCurrentFont(temp_qfont)
         self.currentFontChanged.connect(self.font_selected)
 
     def font_selected(self, new_font):
+        #print(new_font)
         self.values_changed_signal.emit(self.value_type, new_font)
 
 
@@ -346,26 +355,65 @@ class ColourButtonWidget(QFrame):
             # as the selected colour - black is not the default
             # but a placeholder
         super().__init__()
-        self.setAutoFillBackground(True)
-        self.colour_dialog = QColorDialog()
         self.value_type = value_type
-        self.new_palette = QPalette()
-        self.new_palette.setColor(
-            QPalette.ColorRole.Window, QColor().fromRgb(*rgb_value)
-        )
-        self.setPalette(self.new_palette)
+        # self.setFrameStyle(QFrame.Shape.StyledPanel | QFrame.Shape.Panel)
+        self.setAutoFillBackground(True)
+        self.colour_dialog = QColorDialog(self)
 
-    def set_colour(self, rgb_value: tuple):
+        self.text_layout = QHBoxLayout()
+        self.setLayout(self.text_layout)
+
+        self.colour_text = QLabel(self)
+        self.colour_text.setText("Select Colour")
+        self.colour_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.colour_text.setFrameStyle(QFrame.Shape.NoFrame)
+        self.colour_text.setLineWidth(0)
+        self.colour_text.resize(self.sizeHint())
+        self.text_layout.addWidget(self.colour_text)
+
+        self.colour_text_palette = QPalette()
+        self.colour_text.setPalette(self.colour_text_palette)
+        # self.colour_text_palette.setColor(QPalette.ColorRole.WindowText)
+        self.new_palette = QPalette()
+        # self.new_palette.setColor(
+        #     QPalette.ColorRole.Window, QColor().fromRgb(*rgb_value)
+        # )
+        # self.setPalette(self.new_palette)
+        self.set_colour(rgb_value)#, fire_signal=False)
+
+    def get_contrasted_colour(self, rgb_value : tuple, maximum_contrast=256):
+        mininimum_contrast = 128
+        y = round(0.299 * rgb_value[0] + 0.587 * rgb_value[1] + 0.114 * rgb_value[2]) # luminance
+        oy = 255 - y # get opposite
+        dy = oy - y # get delta
+        if abs(dy) > maximum_contrast:
+            dy = copysign(1, dy) * maximum_contrast
+            oy = y + dy
+        elif abs(dy) < mininimum_contrast:
+            dy = copysign(1, dy) * mininimum_contrast
+            oy = y + dy
+        return (temp_int := int(oy), temp_int, temp_int)
+
+    def set_colour(self, rgb_value: tuple): #, fire_signal=True):
         """sets colour of frame and sends signal back to settings window"""
         if not rgb_value:
             self.new_palette.setColor(
                 QPalette.ColorRole.Window, QColor().fromRgb(0, 0, 0)
             )
+            self.colour_text_palette.setColor(
+                QPalette.ColorRole.WindowText, QColor().fromRgb(255, 255, 255)
+            )
         else:
             self.new_palette.setColor(
                 QPalette.ColorRole.Window, QColor().fromRgb(*rgb_value)
             )
+            self.colour_text_palette.setColor(
+                QPalette.ColorRole.WindowText, QColor().fromRgb(*(self.get_contrasted_colour(rgb_value)))
+            )
         self.setPalette(self.new_palette)
+        self.colour_text.setPalette(self.colour_text_palette)
+        # self.colour_text.resize(self.sizeHint())
+        # if fire_signal:
         self.values_changed_signal.emit(
             self.value_type, rgb_value if rgb_value is not None else tuple()
         )
@@ -374,7 +422,6 @@ class ColourButtonWidget(QFrame):
     def mousePressEvent(self, mouse_event: QMouseEvent):
         """detect mouse input to launch colour dialog"""
         if mouse_event.button() == Qt.MouseButton.LeftButton:
-            # print("left")
             self.colour_dialog.setCurrentColor(
                 QColor().fromRgb(
                     *self.new_palette.color(QPalette.ColorRole.Window).getRgb()
@@ -385,7 +432,6 @@ class ColourButtonWidget(QFrame):
             )
             self.colour_dialog.show()
         elif mouse_event.button() == Qt.MouseButton.RightButton:
-            # print("right")
             self.set_colour(None)
 
         # self.colour_button_clicked_signal.emit(self.new_palette, self.new_palette.color(QPalette.ColorRole.Window).getRgb())
@@ -462,6 +508,7 @@ class SettingsWindow(QWidget):
         self.setLayout(self.vertical_layout)
 
         self.change_profile(current_profile_username)
+        # self.load_profile(current_profile_username)
 
     def change_profile(self, username):
         """changes user profile"""
@@ -571,7 +618,7 @@ class SettingsWindow(QWidget):
 
         print("password not entered yet")
         if not self.user_settings_profile["password"]:
-            print("no password set")
+            print("no password set, allow editing")
             return True
         self.password_widget = PasswordDialog(self.user_settings_profile["password"])
         result = self.password_widget.exec()
@@ -589,11 +636,11 @@ class SettingsWindow(QWidget):
 
     def update_settings_profile(self, value_type, value):
         """update settings locally and on the editor"""
-        print(value_type, value)
+        #print(value_type, value)
         validity_state, temp_value = check_type_validity(value_type, value)
-        print(validity_state, temp_value)
+        #print(validity_state, temp_value)
         if validity_state is not None:
-            print(validity_state)
+            #print(validity_state)
             self.error_message.showMessage(validity_state)
             # print("alkdkawda")
 
@@ -640,4 +687,3 @@ class TabCloseDialog(QMessageBox):
         )
         self.setDefaultButton(QMessageBox.StandardButton.Save)
         self.setEscapeButton(QMessageBox.StandardButton.Cancel)
-

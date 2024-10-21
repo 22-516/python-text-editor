@@ -22,7 +22,11 @@ def save_settings_profile_to_db(editor_settings_profile: UserSettingsProfile):
         # print(profile_setting, editor_settings_profile[profile_setting])
         setting_name = profile_setting
         setting_value = editor_settings_profile[profile_setting]
-
+        
+        if setting_name == "password":
+            if get_value_from_profile(editor_settings_profile["username"], "password") == setting_value:
+                continue # password hasn't changed, dont save the already hashed password to db
+        
         encoded_value = encode_to_db_value(setting_name, setting_value)
 
         save_value_to_profile(

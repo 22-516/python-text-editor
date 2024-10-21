@@ -11,7 +11,6 @@ IMAGE_EXTENSIONS = [
     for file_extension in QImageReader.supportedImageFormats()
 ]
 
-
 class TextEditor(QTextEdit):
     def __init__(self, file_path=""):
         super().__init__()
@@ -115,10 +114,7 @@ class TextEditor(QTextEdit):
         return font_weight == QFont.Weight.Bold
 
     def font_size(self):
-        # font_size = str(self.fontPointSize()).split('.', maxsplit=1)[0]
-        # print(font_size)
         font_size = f"{self.currentFont().pointSizeF():g}"
-        # print(font_size)
         return font_size
 
     def toggle_selected_bold(self):
@@ -141,16 +137,16 @@ class TextEditor(QTextEdit):
     def change_font(self, new_font: QFont):
         # we do this convoluted method rather than just calling setFont() because we want to preserve the other formatting
         # (e.g. bold, underline, italics, colour, highlight)
-        cursor = self.textCursor()
+        current_cursor = self.textCursor()
+        cursor = QTextCursor(current_cursor)
 
         selection_end = cursor.selectionEnd()
-        selection_start = cursor.selectionStart()
+        selection_start = cursor.selectionStart() - 1
 
         cursor.setPosition(selection_start)
-
-        while (
-            cursor.position() < selection_end and cursor.position() >= selection_start
-        ):
+        cursor.beginEditBlock()
+        
+        def apply_formatting():
             new_format = QTextCharFormat()
             new_format.setFont(new_font)
             new_format.setFontPointSize(cursor.charFormat().font().pointSizeF())
@@ -160,12 +156,21 @@ class TextEditor(QTextEdit):
             new_format.setBackground(cursor.charFormat().background())
             new_format.setForeground(cursor.charFormat().foreground())
             cursor.mergeCharFormat(new_format)
+
+        while (
+            cursor.position() < selection_end and cursor.position() >= selection_start
+        ):
             cursor.movePosition(
                 QTextCursor.MoveOperation.NextCharacter, QTextCursor.MoveMode.MoveAnchor
             )
             cursor.movePosition(
                 QTextCursor.MoveOperation.NextCharacter, QTextCursor.MoveMode.KeepAnchor
             )
+            
+            apply_formatting()
+
+        cursor.endEditBlock()
+        current_cursor.setPosition(cursor.position())
 
     def change_highlight(self, new_highlight):
         if self.textBackgroundColor() == new_highlight:

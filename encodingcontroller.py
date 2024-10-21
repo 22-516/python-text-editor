@@ -1,3 +1,6 @@
+"""holds functions for encoding and decoding values for the GUI from 
+settings values and dataabase values"""
+
 import string
 import re
 import hashlib
@@ -20,12 +23,10 @@ from encodedtypes import (
     PASSWORD_SPECIAL_CHARACTER_AMOUNT,
 )
 
-
 def tuple_rgb_to_hex(r, g, b, _=None):
     """converts tuple of rgb (r,g,b) back into hex value"""
     # unused var as PyQt rgb values include transparency (unneeded) so we discard
     return f"#{int(round(r)):02x}{int(round(g)):02x}{int(round(b)):02x}"
-
 
 def hex_to_tuple_rgb(hex_code):
     """encodes hex colour value into a tuple with rgb values (r,g,b)"""
@@ -36,13 +37,11 @@ def hex_to_tuple_rgb(hex_code):
     rgb = tuple(int(hex_code[i : i + 2], 16) for i in (0, 2, 4))
     return rgb
 
-
 def list_encode_to_string(input_list: list):
     """encodes a list into a string"""
     if not input_list:
         return None
     return "/".join(map(str, input_list))
-
 
 def string_decode_to_list(input_string: str):
     """decodes the database string into a list of values"""
@@ -50,16 +49,13 @@ def string_decode_to_list(input_string: str):
         return None
     return input_string.split("/")
 
-
 def qfont_to_string(input_font: QFont):
     """returns a string of the font family"""
     return QFontInfo(input_font).family()
 
-
 def string_to_qfont(input_string: str):
     """returns a font"""
     return QFont(input_string)
-
 
 def hash_password(password : str):
     """hashes the password"""
@@ -119,7 +115,7 @@ def check_type_validity(value_type, input_value):
                     )
             if PASSWORD_MUST_CONTAIN_SPECIAL_CHARACTERS:
                 if (
-                    len(re.findall(r"[\w]+", input_value))
+                    len(re.findall(r"[^\w\s]", input_value))
                     < PASSWORD_SPECIAL_CHARACTER_AMOUNT
                 ):
                     error_message.append(
@@ -154,9 +150,8 @@ def check_type_validity(value_type, input_value):
         # we use <br> instead of \n as the QErrorMessage uses an html setter
         # which doesnt recognise \n and prints on the same line
         error_message = "<br>".join(error_message)
-    #print(error_message)
-    return error_message, input_value
 
+    return error_message, input_value
 
 def decode_from_db_value(db_column, db_value):
     """decodes the database values into values readable by the program"""
@@ -174,9 +169,8 @@ def decode_from_db_value(db_column, db_value):
                 # we just return the hash rather than hashing the hash again
                 return db_value
             case _:
-                print("no encoding", db_column, db_value)
+                print("no encoding, get directly", db_column, db_value)
                 return db_value
-
 
 def encode_to_db_value(db_column, db_value):
     """encodes the settings values into database values (as they can only be stored as strings)"""
@@ -193,5 +187,5 @@ def encode_to_db_value(db_column, db_value):
             case EncodeType.HASH:
                 return hash_password(db_value)
             case _:
-                print("no encoding", db_column, db_value)
+                print("no encoding needed, save directly", db_column, db_value)
                 return db_value

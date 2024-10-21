@@ -150,6 +150,7 @@ class MainWindow(QMainWindow):
         self.font_combo_box_widget.currentFontChanged.connect(self.format_text_font)
         # set to latin for inital testing with english fonts
         self.font_combo_box_widget.setWritingSystem(QFontDatabase.WritingSystem.Latin)
+        self.font_combo_box_widget.setFontFilters(QFontComboBox.FontFilter.ScalableFonts)
 
         self.font_size_combo_box_widget = QComboBox(self)
         self.font_size_combo_box_widget.setEditable(True)
@@ -241,6 +242,11 @@ class MainWindow(QMainWindow):
         self.current_editor.currentCharFormatChanged.connect(
             self.on_editor_selection_change
         )
+        # bind to modificationChanged to update the tab name when the user edits the file
+        self.current_editor.document().modificationChanged.connect(self.update_current_tab_name)
+        # whenever a new tab is added, update the editor to edit settings from the user's profile
+        # such as default font, text size, editor background colour, etc
+        self.update_editor_from_settings()
 
     def open_file(self, selected_file=""):
         """attempts to a file of the users choice into the editor"""
@@ -325,25 +331,49 @@ class MainWindow(QMainWindow):
                 self, "Save File", "", supported_file_filter
             )
             # grab extension from file path
-            # so that the user can enter any extension without selecting the specific filter
+            # so that the user can enter any extension without selecting the specific filter\
             if (
-                selected_save_file_path  # if file path is not empty
-                # and if file extension does not match (or not exist)
-                and not selected_file_extension
+                selected_save_file_path # if file path is not empty
+                # and file extension does not match
+                and Path(selected_save_file_path).suffix != selected_file_extension
             ):
                 # add extension to file path if it does not exist
                 # use regex to capture between the brackets in the filter to get current file type
                 # (this is why filters are separated, for ease of use for user when they input a file name)
-                selected_file_extension = (
-                    re.search(r"\((.+?)\)", selected_filter or supported_file_filter)
-                    .group(1)
-                    .replace("*", "")
-                )
-                selected_save_file_path += selected_file_extension
-                selected_save_file_path.strip()
                 print(
-                    selected_save_file_path, tag="info", tag_color="blue", color="white"
-                )
+                    "jfajkw",
+                    selected_save_file_path,
+                    Path(selected_save_file_path).suffix,
+                selected_file_extension)
+                
+                if not selected_file_extension:
+                    selected_file_extension = (
+                        re.search(r"\((.+?)\)", selected_filter or supported_file_filter)
+                        .group(1)
+                        .replace("*", "")
+                    )
+                if not selected_file_extension in selected_save_file_path:
+                    selected_save_file_path += selected_file_extension
+                    selected_save_file_path.strip()
+                print(selected_save_file_path, tag="info", tag_color="blue", color="white")
+            # if (
+            #     selected_save_file_path  # if file path is not empty
+            #     # and if file extension does not match (or not exist)
+            #     and not selected_file_extension
+            # ):
+            #     # add extension to file path if it does not exist
+            #     # use regex to capture between the brackets in the filter to get current file type
+            #     # (this is why filters are separated, for ease of use for user when they input a file name)
+            #     selected_file_extension = (
+            #         re.search(r"\((.+?)\)", selected_filter or supported_file_filter)
+            #         .group(1)
+            #         .replace("*", "")
+            #     )
+            #     selected_save_file_path += selected_file_extension
+            #     selected_save_file_path.strip()
+            #     print(
+            #         selected_save_file_path, tag="info", tag_color="blue", color="white"
+            #     )
 
         if file_controller_save_file(
             self.current_editor, selected_save_file_path, selected_file_extension
